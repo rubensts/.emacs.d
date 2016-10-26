@@ -41,3 +41,8 @@ flycheck_*.el
 
 # projectiles files
 .projectile
+
+# other files and directories
+var
+tmp
+custom.el
