@@ -3036,7 +3036,7 @@ interfering with each other. I think it's safer loading just the chosen one.
 
 #+BEGIN_SRC emacs-lisp
   (use-package leuven-theme
-    :demand t
+    :disabled t
     :config
     (load-theme 'leuven t)
     (setq leuven-scale-outline-headlines nil))
@@ -3050,31 +3050,23 @@ interfering with each other. I think it's safer loading just the chosen one.
               'doom-buffer-mode)                ; brighter source buffers
     (add-hook 'minibuffer-setup-hook
               'doom-brighten-minibuffer)        ; brighter minibuffer when active
-    (require 'doom-neotree)                     ; custom neotree theme
-    )
+    (require 'doom-neotree))                    ; custom neotree theme
 
   (use-package dracula-theme
     :disabled t
     :config
-    (load-theme 'dracula t)
-    )
+    (load-theme 'dracula t))
 
   (use-package gotham-theme
     :disabled t
     :config
-    (gotham-tty-256-colors t)
-    (load-theme 'gotham t)
-    )
+    (load-theme 'gotham t))
 
   (use-package material-theme
-    :disabled t
+    :demand t
     :config
-    (load-theme 'material)
-    (set-face-background 'default "#000")
-    (set-face-background 'region "#223355")
-    (set-face-background 'fringe "#000")
-    (set-face-foreground 'which-func "#7f9f7f"))
-#+END_SRC
+    (load-theme 'material t))
+ #+END_SRC
 
 *** Fine tuning of the theme
 

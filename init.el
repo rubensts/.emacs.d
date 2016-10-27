@@ -2674,7 +2674,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; - [[https://github.com/nashamri/spacemacs-theme][spacemacs-theme]]
 
 (use-package leuven-theme
-  :demand t
+  :disabled t
   :config
   (load-theme 'leuven t)
   (setq leuven-scale-outline-headlines nil))
@@ -2688,30 +2688,22 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
             'doom-buffer-mode)                ; brighter source buffers
   (add-hook 'minibuffer-setup-hook
             'doom-brighten-minibuffer)        ; brighter minibuffer when active
-  (require 'doom-neotree)                     ; custom neotree theme
-  )
+  (require 'doom-neotree))                    ; custom neotree theme
 
 (use-package dracula-theme
   :disabled t
   :config
-  (load-theme 'dracula t)
-  )
+  (load-theme 'dracula t))
 
 (use-package gotham-theme
   :disabled t
   :config
-  (gotham-tty-256-colors t)
-  (load-theme 'gotham t)
-  )
+  (load-theme 'gotham t))
 
 (use-package material-theme
-  :disabled t
+  :demand t
   :config
-  (load-theme 'material)
-  (set-face-background 'default "#000")
-  (set-face-background 'region "#223355")
-  (set-face-background 'fringe "#000")
-  (set-face-foreground 'which-func "#7f9f7f"))
+  (load-theme 'material t))
 
 ;; Fine tuning of the theme
 
