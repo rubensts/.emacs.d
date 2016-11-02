@@ -62,10 +62,14 @@ tangled, and the tangled file is compiled."
 (use-package validate
   :demand t)
 
+;; load libraries
+(use-package s)
+(use-package f)
+
 ;; Initialization
 
 (when (version< emacs-version "25")
-  (warn "This configuration needs Emacs trunk, but this is %s!" emacs-version))
+  (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
 
 ;; Disables calling default.el (default settings) after init.el
 (setq inhibit-default-init t)
@@ -1879,6 +1883,38 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 (setq-default dired-listing-switches "-lhvA")  ; ls switches when dired gets list of files
 
+;; easy-kill
+
+;; [[https://github.com/leoliu/easy-kill][Provide commands]] ~easy-kill~ and ~easy-mark~ to let users kill or mark things
+;; easily.
+
+;; | *Key* | *Command* | *Action*                                   |
+;; |-------+-----------+--------------------------------------------|
+;; | M-w w |           | save word at point                         |
+;; | M-w s |           | save sexp at point                         |
+;; | M-w l |           | save list at point (enclosing sexp)        |
+;; | M-w d |           | save defun at point                        |
+;; | M-w D |           | save current defun name                    |
+;; | M-w f |           | save file at point                         |
+;; | M-w b |           | save buffer-file-name or default-directory |
+;; |       |           |                                            |
+
+;; The following keys modify the selection:
+
+;; | *Key* | *Command* | *Action*                                                                                                    |
+;; |-------+-----------+-------------------------------------------------------------------------------------------------------------|
+;; | @     |           | append selection to previous kill and exit. For example, M-w d @ will append current function to last kill. |
+;; | C-w   |           | kill selection and exit                                                                                     |
+;; | +, -  |           | and 1..9: expand/shrink selection                                                                           |
+;; | 0     |           | shrink the selection to the initial size i.e. before any expansion                                          |
+;; | C-SPC |           | turn selection into an active region                                                                        |
+;; | C-g   |           | abort                                                                                                       |
+;; | ?     |           | help                                                                                                        |
+
+(use-package easy-kill
+  :bind (([remap kill-ring-save] . easy-kill)
+         ([remap mark-sexp] . easy-mark)))
+
 ;; ediff
 ;; The default ~ediff-mode~ isn't quite optimized. The following settings are taken
 ;; from [[http://oremacs.com/2015/01/17/setting-up-ediff/][Oremacs]].
@@ -1924,6 +1960,13 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
             (insert ,k)))))
    (list " " "-" "+"))
   )
+
+;; expand-region
+
+;; [[https://github.com/magnars/expand-region.el][Expand region]] increases the selected region by semantic units. Just keep
+;; pressing the key until it selects what you want.
+
+(use-package expand-region)
 
 ;; fill-column-indicator
 ;; Toggle the vertical column that indicates the fill threshold.
@@ -2695,10 +2738,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   :config
   (load-theme 'dracula t))
 
-(use-package gotham-theme
+(use-package zerodark-theme
   :disabled t
   :config
-  (load-theme 'gotham t))
+  (load-theme 'zerodark t)
+  (zerodark-setup-modeline-format-alt))
 
 (use-package material-theme
   :demand t
@@ -2712,25 +2756,25 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; the ~material-theme~, which is the one I'm using. If you want to change the
 ;; ~solarized-theme~ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
 
-;; (custom-theme-set-faces
-;;  'material
-;;  `(org-level-1 ((t (:inherit outline-1
-;;                                   :background ,"#455A64"
-;;                                   :weight bold
-;;                                   :box (:style released-button)
-;;                                   :height 1.1))))
-;;  `(org-level-2 ((t (:inherit outline-2
-;;                                   :background ,"#35575b"
-;;                                   :box (:style released-button)
-;;                                   :height 1.0))))
-;;  `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
-;;  `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
-;;  `(org-level-5 ((t (:inherit outline-5 ))))
-;;  `(org-level-6 ((t (:inherit outline-6 ))))
-;;  `(org-level-7 ((t (:inherit outline-7 ))))
-;;  `(org-level-8 ((t (:inherit outline-8 ))))
-;;  `(org-level-9 ((t (:inherit outline-9 ))))
-;;  )
+(custom-theme-set-faces
+ 'material
+ `(org-level-1 ((t (:inherit outline-1
+                                  :background ,"#455A64"
+                                  :weight bold
+                                  :box (:style released-button)
+                                  :height 1.1))))
+ `(org-level-2 ((t (:inherit outline-2
+                                  :background ,"#35575b"
+                                  :box (:style released-button)
+                                  :height 1.0))))
+ `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
+ `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
+ `(org-level-5 ((t (:inherit outline-5 ))))
+ `(org-level-6 ((t (:inherit outline-6 ))))
+ `(org-level-7 ((t (:inherit outline-7 ))))
+ `(org-level-8 ((t (:inherit outline-8 ))))
+ `(org-level-9 ((t (:inherit outline-9 ))))
+ )
 
 ;; Fonts
 
@@ -2745,9 +2789,9 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                            :height 100)))
 
       ;; Set a smaller font for the mode line
-      (set-face-attribute 'mode-line nil
-                          :family "Source Code Pro"
-                          :height 90)
+      ;; (set-face-attribute 'mode-line nil
+      ;;                     :family "Source Code Pro"
+      ;;                     :height 90)
 
 ;; Set a font with great support for Unicode Symbols to fallback in
 ;; those case where certain Unicode glyphs are missing in the
@@ -2760,7 +2804,51 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; [[https://github.com/domtronn/all-the-icons.el][all-the-icons]] is a utility package to collect various Icon Fonts and propertize
 ;; them within Emacs.
 
-(use-package all-the-icons)
+(use-package all-the-icons
+  :demand t)
+
+;; delight
+
+;; Delight enables you to easily customise how major and minor modes appear in the
+;; ModeLine.
+
+;; It is similar in purpose to DiminishedModes but it accounts for major modes as
+;; well as minor modes, and also incorporates the necessary ‘eval-after-load’ call
+;; for minor modes, which makes the configuration simpler.
+
+(use-package delight
+  :demand t
+  :config
+  (delight '((company-mode " Ⓐ" company)
+             (hs-minor-mode " ⓗ" hideshow)
+             (outline-minor-mode " Ⓞ" outline)
+             (outline-mode " Ⓞ" :major)
+             (git-gutter-mode " Ⓖ" git-gutter)
+             (flyspell-mode " Ⓕ" flyspell)
+             (smartparens-mode " Ⓢ" smartparens)
+             (elisp-slime-nav-mode nil elisp-slime-nav)
+             (emacs-lisp-mode "Elisp" :major)
+             (lisp-interaction-mode "LispI" :major)
+             (ess-noweb-font-lock-mode nil ess)
+             (reftex-mode " Ⓡ" reftex)
+             (visual-line-mode " Ⓦ" simple)
+             (ess-noweb-mode " Ⓝ" ess)
+             (anzu-mode " Ⓩ" anzu)
+             (abbrev-mode " ⓐ" abbrev)
+             (helm-mode " Ⓗ" helm)
+             (rainbow-mode)
+             (org-indent-mode nil org-indent)
+             (which-key-mode nil which-key)
+             (counsel-mode nil counsel)
+             (ivy-mode nil ivy)
+             (fixmee-mode nil fixmee)
+             (button-lock-mode nil button-lock)
+             (beacon-mode nil beacon)
+             (page-break-lines-mode nil page-break-lines)
+             (auto-revert-mode nil autorevert)
+             (undo-tree-mode nil undo-tree)
+             ;;(server-buffer-clients . " ⓒ")
+             )))
 
 ;; spaceline
 

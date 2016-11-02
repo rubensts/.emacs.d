@@ -191,13 +191,17 @@ a concise and powerful way to organize Emacs configuration avoiding the terrible
 
   (use-package validate
     :demand t)
+
+  ;; load libraries
+  (use-package s)
+  (use-package f)
 #+END_SRC
 
 ** Initialization
 
 #+BEGIN_SRC emacs-lisp
   (when (version< emacs-version "25")
-    (warn "This configuration needs Emacs trunk, but this is %s!" emacs-version))
+    (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
 
   ;; Disables calling default.el (default settings) after init.el
   (setq inhibit-default-init t)
@@ -2140,6 +2144,40 @@ Load up the assorted dired extensions.
   (setq-default dired-listing-switches "-lhvA")  ; ls switches when dired gets list of files
 #+END_SRC
 
+** easy-kill
+
+[[https://github.com/leoliu/easy-kill][Provide commands]] ~easy-kill~ and ~easy-mark~ to let users kill or mark things
+easily.
+
+| *Key* | *Command* | *Action*                                   |
+|-------+-----------+--------------------------------------------|
+| M-w w |           | save word at point                         |
+| M-w s |           | save sexp at point                         |
+| M-w l |           | save list at point (enclosing sexp)        |
+| M-w d |           | save defun at point                        |
+| M-w D |           | save current defun name                    |
+| M-w f |           | save file at point                         |
+| M-w b |           | save buffer-file-name or default-directory |
+|       |           |                                            |
+
+The following keys modify the selection:
+
+| *Key* | *Command* | *Action*                                                                                                    |
+|-------+-----------+-------------------------------------------------------------------------------------------------------------|
+| @     |           | append selection to previous kill and exit. For example, M-w d @ will append current function to last kill. |
+| C-w   |           | kill selection and exit                                                                                     |
+| +, -  |           | and 1..9: expand/shrink selection                                                                           |
+| 0     |           | shrink the selection to the initial size i.e. before any expansion                                          |
+| C-SPC |           | turn selection into an active region                                                                        |
+| C-g   |           | abort                                                                                                       |
+| ?     |           | help                                                                                                        |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package easy-kill
+    :bind (([remap kill-ring-save] . easy-kill)
+           ([remap mark-sexp] . easy-mark)))
+#+END_SRC
+
 ** ediff
 The default ~ediff-mode~ isn't quite optimized. The following settings are taken
 from [[http://oremacs.com/2015/01/17/setting-up-ediff/][Oremacs]].
@@ -2186,6 +2224,15 @@ sees unicode encoded files as binary files ([[http://stackoverflow.com/questions
               (insert ,k)))))
      (list " " "-" "+"))
     )
+#+END_SRC
+
+** expand-region
+
+[[https://github.com/magnars/expand-region.el][Expand region]] increases the selected region by semantic units. Just keep
+pressing the key until it selects what you want.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package expand-region)
 #+END_SRC
 
 ** fill-column-indicator
@@ -3017,6 +3064,7 @@ key-binding using `bind` from use-package:
     :config
     (eval-after-load 'tramp '(vagrant-tramp-enable)))
 #+END_SRC
+
 * Appearance
 ** Themes
 
@@ -3057,10 +3105,11 @@ interfering with each other. I think it's safer loading just the chosen one.
     :config
     (load-theme 'dracula t))
 
-  (use-package gotham-theme
+  (use-package zerodark-theme
     :disabled t
     :config
-    (load-theme 'gotham t))
+    (load-theme 'zerodark t)
+    (zerodark-setup-modeline-format-alt))
 
   (use-package material-theme
     :demand t
@@ -3076,25 +3125,25 @@ the ~material-theme~, which is the one I'm using. If you want to change the
 ~solarized-theme~ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
 
 #+BEGIN_SRC emacs-lisp
-  ;; (custom-theme-set-faces
-  ;;  'material
-  ;;  `(org-level-1 ((t (:inherit outline-1
-  ;;                                   :background ,"#455A64"
-  ;;                                   :weight bold
-  ;;                                   :box (:style released-button)
-  ;;                                   :height 1.1))))
-  ;;  `(org-level-2 ((t (:inherit outline-2
-  ;;                                   :background ,"#35575b"
-  ;;                                   :box (:style released-button)
-  ;;                                   :height 1.0))))
-  ;;  `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
-  ;;  `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
-  ;;  `(org-level-5 ((t (:inherit outline-5 ))))
-  ;;  `(org-level-6 ((t (:inherit outline-6 ))))
-  ;;  `(org-level-7 ((t (:inherit outline-7 ))))
-  ;;  `(org-level-8 ((t (:inherit outline-8 ))))
-  ;;  `(org-level-9 ((t (:inherit outline-9 ))))
-  ;;  )
+  (custom-theme-set-faces
+   'material
+   `(org-level-1 ((t (:inherit outline-1
+                                    :background ,"#455A64"
+                                    :weight bold
+                                    :box (:style released-button)
+                                    :height 1.1))))
+   `(org-level-2 ((t (:inherit outline-2
+                                    :background ,"#35575b"
+                                    :box (:style released-button)
+                                    :height 1.0))))
+   `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
+   `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
+   `(org-level-5 ((t (:inherit outline-5 ))))
+   `(org-level-6 ((t (:inherit outline-6 ))))
+   `(org-level-7 ((t (:inherit outline-7 ))))
+   `(org-level-8 ((t (:inherit outline-8 ))))
+   `(org-level-9 ((t (:inherit outline-9 ))))
+   )
 #+END_SRC
 
 ** Fonts
@@ -3111,9 +3160,9 @@ the ~material-theme~, which is the one I'm using. If you want to change the
                              :height 100)))
 
         ;; Set a smaller font for the mode line
-        (set-face-attribute 'mode-line nil
-                            :family "Source Code Pro"
-                            :height 90)
+        ;; (set-face-attribute 'mode-line nil
+        ;;                     :family "Source Code Pro"
+        ;;                     :height 90)
 
   ;; Set a font with great support for Unicode Symbols to fallback in
   ;; those case where certain Unicode glyphs are missing in the
@@ -3129,7 +3178,8 @@ the ~material-theme~, which is the one I'm using. If you want to change the
 them within Emacs.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package all-the-icons)
+  (use-package all-the-icons
+    :demand t)
 #+END_SRC
 
 *** delight
@@ -3141,7 +3191,7 @@ It is similar in purpose to DiminishedModes but it accounts for major modes as
 well as minor modes, and also incorporates the necessary ‘eval-after-load’ call
 for minor modes, which makes the configuration simpler.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package delight
     :demand t
     :config
@@ -3172,6 +3222,7 @@ for minor modes, which makes the configuration simpler.
                (beacon-mode nil beacon)
                (page-break-lines-mode nil page-break-lines)
                (auto-revert-mode nil autorevert)
+               (undo-tree-mode nil undo-tree)
                ;;(server-buffer-clients . " ⓒ")
                )))
 #+END_SRC
@@ -3190,13 +3241,6 @@ for minor modes, which makes the configuration simpler.
     :ensure nil
     :config
     (spaceline-spacemacs-theme))
-#+END_SRC
-
-*** powerline
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package telephone-line
-    :demand t)
 #+END_SRC
 
 ** Other details
