@@ -205,7 +205,7 @@ tangled, and the tangled file is compiled."
 ;; settings for the modeline
 (column-number-mode t)                        ; shows column number on the modeline
 (setq size-indication-mode t)
-(which-function-mode 1)
+;;(which-function-mode 1)
 
 ;; silence the beep sound, and shows the alarm bell visually on the modeline
 (setq ring-bell-function (lambda ()
@@ -2200,7 +2200,8 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; - to index and search: [[http://www.djcbsoftware.nl/code/mu/][mu]]
 ;; - to read (frontend): [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]
 
-(load "~/my-prj/dotfiles/init-email.el" t)
+(load "~/my-prj/dotfiles/init-notmuch.el" t)
+;;(load "~/my-prj/dotfiles/init-mu4e.el" t)
 
 ;; elfeed
 
