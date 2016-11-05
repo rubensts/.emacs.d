@@ -2200,8 +2200,8 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; - to index and search: [[http://www.djcbsoftware.nl/code/mu/][mu]]
 ;; - to read (frontend): [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]
 
-(load "~/my-prj/dotfiles/init-notmuch.el" t)
-;;(load "~/my-prj/dotfiles/init-mu4e.el" t)
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+(load "~/my-prj/dotfiles/init-mu4e.el" t)
 
 ;; elfeed
 
