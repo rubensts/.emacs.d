@@ -586,6 +586,7 @@ text and copying to the killring."
            (R . t)
            (ruby . t)
            (sh . t)
+           (sqlite . t)
            (sql . t)
            ))))
 
@@ -2060,6 +2061,12 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 (add-to-list 'flycheck-checkers 'proselint)
 
+;; graphviz-dot-mode
+
+;; [[https://github.com/ppareit/graphviz-dot-mode][graphviz-dot-mode]] is a mode for the DOT language, used by =graphviz=.
+
+(use-package graphviz-dot-mode)
+
 ;; neotree
 
 (use-package neotree
@@ -2081,6 +2088,22 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 (use-package pass
   :ensure t)
+
+;; pcache
+
+;; [[https://github.com/sigma/pcache][pcache]] provides a persistent way of caching data, in a hashtable-like structure.
+;; It relies on `eieio-persistent' in the backend, so that any object that can be
+;; serialized by EIEIO can be stored with pcache.
+
+;; [[https://github.com/rolandwalker/persistent-soft][persistent-soft]] is a wrapper around pcache.el, providing "soft" fetch and store routines
+;; which never throw an error, but instead return nil on failure.
+
+(use-package pcache
+  :demand t)
+
+(use-package persistent-soft
+  :demand t
+  :after pcache)
 
 ;; recentf
 
@@ -2191,17 +2214,81 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                   ("deletechar"          . "⌦")
                   ("RET"                 . "⏎"))))
 
-;; email
-
-;; E-mail is set using the following applications:
-
-;; - to retrieve: [[http://isync.sourceforge.net/][isync(mbsync)]]
-;; - to send: [[http://msmtp.sourceforge.net/][msmtp]]
-;; - to index and search: [[http://www.djcbsoftware.nl/code/mu/][mu]]
-;; - to read (frontend): [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]
+;; mu4e
 
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
 (load "~/my-prj/dotfiles/init-mu4e.el" t)
+
+;; mu4e-contrib
+
+(use-package mu4e-contrib
+  :after mu4e
+  :ensure nil
+  :config
+  ;; try to emulate some of the eww key-bindings
+  (add-hook 'mu4e-view-mode-hook
+            (lambda ()
+              (local-set-key (kbd "<tab>") 'shr-next-link)
+              (local-set-key (kbd "<backtab>") 'shr-previous-link))))
+
+;; org-mu4e
+
+(use-package org-mu4e
+  :after mu4e
+  :ensure nil)
+
+;; mu4e-alert
+
+(use-package mu4e-alert
+  :after mu4e
+  :init
+  (add-hook 'after-init-hook
+            #'mu4e-alert-enable-notifications)       ; enable notifications
+  (add-hook 'after-init-hook
+            #'mu4e-alert-enable-mode-line-display)   ; display unread email count in the mode-line
+  :config
+  (validate-setq
+   mu4e-alert-email-notification-types '(count))  ; notifications display only the number of unread emails
+
+  ;; Choose the desktop notification style accordingly to the OS
+  (cond ((eq system-type 'gnu/linux)
+         (mu4e-alert-set-default-style 'libnotify)
+         ;;(mu4e-alert-set-default-style 'notifications) ; alternative
+         )
+        ((eq system-type 'darwin)
+         (mu4e-alert-set-default-style 'notifier)
+         ;; (mu4e-alert-set-default-style 'growl)        ; alternative
+         ))
+
+  (alert-add-rule
+   :category "mu4e-alert"
+   :predicate (lambda (_) (string-match-p "^mu4e-" (symbol-name major-mode)))
+   :continue t))
+
+;; mu4e-maildirs-extension
+
+;; It adds a maildir summary in mu4e-main-view.
+
+(use-package mu4e-maildirs-extension
+  :after mu4e
+  :config
+  (mu4e-maildirs-extension)
+  (validate-setq mu4e-maildirs-extension-maildir-separator    "*"
+                 mu4e-maildirs-extension-submaildir-separator "✉"
+                 mu4e-maildirs-extension-action-text          nil))
+
+;; decorate mu main view
+
+(defun my-mu4e-main-mode-font-lock-rules ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "\\[\\([a-zA-Z]\\{1,2\\}\\)\\]" nil t)
+      (add-text-properties (match-beginning 1) (match-end 1)
+                           '(face font-lock-variable-name-face)))))
+(add-hook 'mu4e-main-mode-hook 'my-mu4e-main-mode-font-lock-rules)
+
+;; more cool and practical than the default
+(setq mu4e-headers-from-or-to-prefix '("" . "➜ "))
 
 ;; elfeed
 
@@ -2739,6 +2826,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   :config
   (load-theme 'dracula t))
 
+(use-package monokai-theme
+  :demand t
+  :config
+  (load-theme 'monokai t))
+
 (use-package zerodark-theme
   :disabled t
   :config
@@ -2746,7 +2838,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   (zerodark-setup-modeline-format-alt))
 
 (use-package material-theme
-  :demand t
+  :disabled t
   :config
   (load-theme 'material t))
 
@@ -2757,48 +2849,95 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; the ~material-theme~, which is the one I'm using. If you want to change the
 ;; ~solarized-theme~ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
 
-(custom-theme-set-faces
- 'material
- `(org-level-1 ((t (:inherit outline-1
-                                  :background ,"#455A64"
-                                  :weight bold
-                                  :box (:style released-button)
-                                  :height 1.1))))
- `(org-level-2 ((t (:inherit outline-2
-                                  :background ,"#35575b"
-                                  :box (:style released-button)
-                                  :height 1.0))))
- `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
- `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
- `(org-level-5 ((t (:inherit outline-5 ))))
- `(org-level-6 ((t (:inherit outline-6 ))))
- `(org-level-7 ((t (:inherit outline-7 ))))
- `(org-level-8 ((t (:inherit outline-8 ))))
- `(org-level-9 ((t (:inherit outline-9 ))))
- )
+;; (custom-theme-set-faces
+;;  'material
+;;  `(org-level-1 ((t (:inherit outline-1
+;;                              :background ,"#455A64"
+;;                              :weight bold
+;;                              :box (:style released-button)
+;;                              :height 1.1))))
+;;  `(org-level-2 ((t (:inherit outline-2
+;;                              :background ,"#35575b"
+;;                              :box (:style released-button)
+;;                              :height 1.0))))
+;;  `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
+;;  `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
+;;  `(org-level-5 ((t (:inherit outline-5 ))))
+;;  `(org-level-6 ((t (:inherit outline-6 ))))
+;;  `(org-level-7 ((t (:inherit outline-7 ))))
+;;  `(org-level-8 ((t (:inherit outline-8 ))))
+;;  `(org-level-9 ((t (:inherit outline-9 ))))
+;;  )
 
 ;; Fonts
 
-(cond ((eq system-type 'gnu/linux)
-       (set-face-attribute 'default nil
-                           :family "Source Code Pro"
-                           :height 90))
+;; (cond ((eq system-type 'gnu/linux)
+;;        (set-face-attribute 'default nil
+;;                            :family "Source Code Pro"
+;;                            :height 90))
 
-      ((eq system-type 'darwin)
-       (set-face-attribute 'default nil
-                           :family "Source Code Pro"
-                           :height 100)))
+;;       ((eq system-type 'darwin)
+;;        (set-face-attribute 'default nil
+;;                            :family "Source Code Pro"
+;;                            :height 100)))
 
-      ;; Set a smaller font for the mode line
-      ;; (set-face-attribute 'mode-line nil
-      ;;                     :family "Source Code Pro"
-      ;;                     :height 90)
+;; Set a smaller font for the mode line
+;; (set-face-attribute 'mode-line nil
+;;                     :family "Source Code Pro"
+;;                     :height 90)
 
 ;; Set a font with great support for Unicode Symbols to fallback in
 ;; those case where certain Unicode glyphs are missing in the
 ;; current font. Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
-(set-fontset-font "fontset-default" nil
-                  (font-spec :size 20 :name "Symbola"))
+;; (set-fontset-font "fontset-default" nil
+;;                   (font-spec :size 20 :name "Symbola"))
+
+;;  (set-fontset-font "fontset-default" 'unicode "Dejavu Sans Mono")
+
+
+(set-face-attribute 'default nil
+                    :family "Source Code Pro" :height 90)
+(set-face-attribute 'variable-pitch nil
+                    :family "Fira Sans" :height 100 :weight 'regular)
+
+;; Font setup
+(defun my-configure-fonts (frame)
+  "Set up fonts for FRAME.
+Set the default font, and configure various overrides for
+symbols, emojis, greek letters, as well as fall backs for."
+  ;; Additional fonts for special characters and fallbacks
+  ;; Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
+  (dolist (script '(symbol mathematical))
+    (set-fontset-font t script (font-spec :family "XITS Math")
+                      frame 'prepend))
+
+  ;; Define a font set stack for symbols, greek and math characters
+  (dolist (script '(symbol greek mathematical))
+    (set-fontset-font t script (font-spec :family "Arial Unicode MS")
+                      frame 'prepend)
+    (set-fontset-font t script (font-spec :family "Menlo")
+                      frame 'prepend)
+    (set-fontset-font t script (font-spec :family "DejaVu Sans Mono")
+                      frame 'prepend))
+
+  (when (eq system-type 'darwin)
+    ;; Colored Emoji on OS X, prefer over everything else!
+    (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
+                      frame 'prepend))
+
+  ;; Fallbacks for math and generic symbols
+  (set-fontset-font t nil (font-spec :family "Apple Symbols")
+                    frame 'append))
+
+(when-let (frame (selected-frame))
+  (my-configure-fonts frame))
+(add-hook 'after-make-frame-functions #'my-configure-fonts)
+
+
+  (use-package unicode-fonts
+    :demand t
+    :config
+    (unicode-fonts-setup))
 
 ;; all-the-icons
 
