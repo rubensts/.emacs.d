@@ -2827,7 +2827,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   (load-theme 'dracula t))
 
 (use-package monokai-theme
-  :demand t
+  :disabled t
   :config
   (load-theme 'monokai t))
 
@@ -2838,9 +2838,13 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   (zerodark-setup-modeline-format-alt))
 
 (use-package material-theme
-  :disabled t
+  :demand t
   :config
-  (load-theme 'material t))
+  (load-theme 'material t)
+  (custom-set-faces
+   '(mu4e-unread-face ((t (:inherit font-lock-keyword-face
+                                    :foreground "magenta"
+                                    :weight normal))))))
 
 ;; Fine tuning of the theme
 
@@ -2849,25 +2853,25 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; the ~material-theme~, which is the one I'm using. If you want to change the
 ;; ~solarized-theme~ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
 
-;; (custom-theme-set-faces
-;;  'material
-;;  `(org-level-1 ((t (:inherit outline-1
-;;                              :background ,"#455A64"
-;;                              :weight bold
-;;                              :box (:style released-button)
-;;                              :height 1.1))))
-;;  `(org-level-2 ((t (:inherit outline-2
-;;                              :background ,"#35575b"
-;;                              :box (:style released-button)
-;;                              :height 1.0))))
-;;  `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
-;;  `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
-;;  `(org-level-5 ((t (:inherit outline-5 ))))
-;;  `(org-level-6 ((t (:inherit outline-6 ))))
-;;  `(org-level-7 ((t (:inherit outline-7 ))))
-;;  `(org-level-8 ((t (:inherit outline-8 ))))
-;;  `(org-level-9 ((t (:inherit outline-9 ))))
-;;  )
+(custom-theme-set-faces
+ 'material
+ `(org-level-1 ((t (:inherit outline-1
+                             :background ,"#455A64"
+                             :weight bold
+                             :box (:style released-button)
+                             :height 1.1))))
+ `(org-level-2 ((t (:inherit outline-2
+                             :background ,"#35575b"
+                             :box (:style released-button)
+                             :height 1.0))))
+ `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
+ `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
+ `(org-level-5 ((t (:inherit outline-5 ))))
+ `(org-level-6 ((t (:inherit outline-6 ))))
+ `(org-level-7 ((t (:inherit outline-7 ))))
+ `(org-level-8 ((t (:inherit outline-8 ))))
+ `(org-level-9 ((t (:inherit outline-9 ))))
+ )
 
 ;; Fonts
 
