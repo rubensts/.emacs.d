@@ -2248,9 +2248,9 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
             #'mu4e-alert-enable-mode-line-display)   ; display unread email count in the mode-line
   :config
   (validate-setq
-   mu4e-alert-email-notification-types '(count))  ; notifications display only the number of unread emails
+   mu4e-alert-email-notification-types '(count))     ; display only total number of unread emails
 
-  ;; Choose the desktop notification style accordingly to the OS
+  ;; Set notification style accordingly to the OS
   (cond ((eq system-type 'gnu/linux)
          (mu4e-alert-set-default-style 'libnotify)
          ;;(mu4e-alert-set-default-style 'notifications) ; alternative
@@ -2277,7 +2277,19 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                  mu4e-maildirs-extension-submaildir-separator "✉"
                  mu4e-maildirs-extension-action-text          nil))
 
-;; decorate mu main view
+;; Sending emails asynchronous
+
+;; This is useful to send emails with attachments and do not block emacs until end
+;; the transmission. It requires [[https://github.com/jwiegley/emacs-async][emacs-async]].
+
+(use-package smtpmail-async
+  :ensure async
+  :config
+  (validate-setq
+   send-mail-function 'async-smtpmail-send-it
+   message-send-mail-function 'async-smtpmail-send-it))
+
+;; Decorate mu main view
 
 (defun my-mu4e-main-mode-font-lock-rules ()
   (save-excursion
@@ -2289,6 +2301,78 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; more cool and practical than the default
 (setq mu4e-headers-from-or-to-prefix '("" . "➜ "))
+
+;; Fontify mu faces
+
+;; [[https://groups.google.com/forum/#!topic/mu-discuss/AJ1A-Z8RMv4][source]]
+
+(defgroup mu4e-faces nil
+  "Type faces (fonts) used in mu4e."
+  :group 'mu4e
+  :group 'faces)
+
+(defface mu4e-basic-face
+  '((t :inherit font-lock-keyword-face))
+  "Basic Face."
+  :group 'mu4e-faces)
+
+(defface mu4e-list-default
+  '((t :inherit mu4e-basic-face))
+  "Basic list Face."
+  :group 'mu4e-faces)
+
+(defface mu4e-rw-default
+  '((t :inherit mu4e-basic-face))
+  "Basic rw Face."
+  :group 'mu4e-faces)
+
+;; basic face from where the rest inherits
+'(mu4e-basic-face ((t :inherit font-lock-keyword-face :weight normal :foreground "Gray10")))
+
+;; read-write group
+'(mu4e-rw-default ((t :inherit mu4e-basic-face))) ;; face from where all the read/write faces inherits
+'(mu4e-header-face ((t :inherit mu4e-rw-default)))
+'(mu4e-header-marks-face ((t :inherit mu4e-rw-default)))
+'(mu4e-header-title-face ((t :inherit mu4e-rw-default)))
+'(mu4e-header-highlight-face ((t :inherit mu4e-rw-default :foreground "Black" :background "LightGray")))
+'(mu4e-compose-header-face ((t :inherit mu4e-rw-default)))
+'(mu4e-compose-separator-face ((t :inherit mu4e-rw-default :foreground "Gray30" :weight bold)))
+'(mu4e-footer-face  ((t :inherit mu4e-rw-default)))
+'(mu4e-contact-face ((t :inherit mu4e-rw-default   :foreground "Black")))
+'(mu4e-cited-1-face ((t :inherit mu4e-rw-default   :foreground "Gray10")))
+'(mu4e-cited-2-face ((t :inherit mu4e-cited-1-face :foreground "Gray20")))
+'(mu4e-cited-3-face ((t :inherit mu4e-cited-2-face :foreground "Gray30")))
+'(mu4e-cited-4-face ((t :inherit mu4e-cited-3-face :foreground "Gray40")))
+'(mu4e-cited-5-face ((t :inherit mu4e-cited-4-face :foreground "Gray50")))
+'(mu4e-cited-6-face ((t :inherit mu4e-cited-5-face :foreground "Gray60")))
+'(mu4e-cited-7-face ((t :inherit mu4e-cited-6-face :foreground "Gray70")))
+'(mu4e-link-face    ((t :inherit mu4e-rw-default   :foreground "Blue" :weight bold)))
+'(mu4e-system-face  ((t :inherit mu4e-rw-defaul    :foreground "DarkOrchid")))
+'(mu4e-url-number-face ((t :inherit mu4e-rw-default :weight bold)))
+'(mu4e-attach-number-face ((t :inherit mu4e-rw-default :weight bold :foreground "Blue")))
+
+;; lists (headers) group
+'(mu4e-list-default ((t :inherit mu4e-basic-face))) ;; basic list face from where lists inherits
+'(mu4e-draft-face   ((t :inherit mu4e-list-default)))
+'(mu4e-flagged-face ((t :inherit mu4e-list-default :weight bold :foreground "Black")))
+'(mu4e-forwarded-face ((t :inherit mu4e-list-default)))
+'(mu4e-list-default-face ((t :inherit mu4e-list-default)))
+'(mu4e-title-face    ((t :inherit mu4e-list-default)))
+'(mu4e-trashed-face  ((t :inherit mu4e-list-default)))
+'(mu4e-warning-face  ((t :inherit mu4e-list-default :foreground "OrangeRed1")))
+'(mu4e-modeline-face ((t :inherit mu4e-list-default)))
+'(mu4e-moved-face    ((t :inherit mu4e-list-default)))
+'(mu4e-ok-face       ((t :inherit mu4e-list-default :foreground "ForestGreen")))
+'(mu4e-read-face     ((t :inherit mu4e-list-default :foreground "Gray80")))
+'(mu4e-region-code-face ((t :inherit mu4e-list-default :background "Gray25")))
+'(mu4e-replied-face   ((t :inherit mu4e-list-default :foreground "Black")))
+'(mu4e-unread-face    ((t :inherit mu4e-list-default :foreground "Blue")))
+'(mu4e-highlight-face ((t :inherit mu4e-unread-face)))
+
+'(mu4e-special-header-value-face ((t :inherit mu4e-contact-face)))
+'(mu4e-header-key-face   ((t :inherit mu4e-contact-face :foreground "Gray50")))
+'(mu4e-header-value-face ((t :inherit mu4e-contact-face)))
+'(message-cited-text     ((t :inherit mu4e-rw-default :foreground "Gray10")))
 
 ;; elfeed
 
@@ -2840,11 +2924,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 (use-package material-theme
   :demand t
   :config
-  (load-theme 'material t)
-  (custom-set-faces
-   '(mu4e-unread-face ((t (:inherit font-lock-keyword-face
-                                    :foreground "magenta"
-                                    :weight normal))))))
+  (load-theme 'material t))
 
 ;; Fine tuning of the theme
 
