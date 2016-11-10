@@ -2225,6 +2225,35 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   :after mu4e
   :ensure nil
   :config
+  ;; Custom marks
+  (validate-setq mu4e-headers-draft-mark     '("D" . "📝 ") ;; ✒ ✏
+                 mu4e-headers-flagged-mark   '("F" . "🏴 ")
+                 mu4e-headers-new-mark       '("N" . "✉ ")
+                 mu4e-headers-passed-mark    '("P" . "→ ") ;; ↪
+                 mu4e-headers-replied-mark   '("R" . "← ")
+                 mu4e-headers-seen-mark      '("S" . "🗸")  ;; ✓ 🗸 ✔
+                 mu4e-headers-trashed-mark   '("T" . "✗ ") ;; 🗑
+                 mu4e-headers-attach-mark    '("a" . "📎 ")
+                 mu4e-headers-encrypted-mark '("x" . "🔐 ")
+                 mu4e-headers-signed-mark    '("s" . "🔏 ")
+                 mu4e-headers-unread-mark    '("u" . "● ") ;; ★
+                 mu4e-headers-empty-parent-prefix '("-" . "○")
+                 mu4e-headers-first-child-prefix  '("\\" . "┗━❯")
+                 mu4e-headers-has-child-prefix    '("+" . "┗◉")
+                 mu4e-headers-duplicate-prefix    '("=" . "⚌")
+                 mu4e-headers-default-prefix      '("|" . "┃")
+
+                 mu4e-headers-date-format "%Y-%m-%d %H:%M"       ; date format of the header list
+                 mu4e-headers-time-format "%H:%M"                ; time format of the header list
+                 mu4e-date-format-long "%A %Y-%m-%d %T %z (%Z)"  ; date format in the message view
+
+                 mu4e-headers-fields '((:date           . 20)
+                                       (:flags          . 7)
+                                       (:mailing-list   . 15)
+                                       (:from-or-to     . 40)
+                                       (:thread-subject . nil))
+                 )
+
   ;; try to emulate some of the eww key-bindings
   (add-hook 'mu4e-view-mode-hook
             (lambda ()
