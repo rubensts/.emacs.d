@@ -599,26 +599,24 @@ try Emacs, then they are hooked ;)
      org-src-tab-acts-natively t             ; in code-blocks TAB acts natively language major mode
      org-src-window-setup 'current-window    ; open code-blocks in the current window
      org-confirm-babel-evaluate nil          ; don't ask for confirmation when compiling code-blocks
-     org-latex-create-formula-image-program 'imagemagick)  ; preview latex fragments
+     org-latex-create-formula-image-program 'imagemagick   ; preview latex fragments
 
-    (validate-setq
+     ;; Files location
      org-directory "~/org"
-     org-default-notes-file (concat
-                             org-directory "/notes.org")
+     org-default-notes-file (concat org-directory "/notes.org")
      org-agenda-files (list "~/org/todo.org"
                             "~/org/2ndquadrant.org"))
 
-    ;; Define TODO workflow states
-    (validate-setq
-     org-todo-keywords
-     '("☛ TODO(t)" "⚑ WAIT(w@)" "|" "✔ DONE(d)" "✘ CANCEL(c@)"))
+    ;; TODO workflow states
+    org-todo-keywords
+    '("☛ TODO(t)" "⚑ WAIT(w@)" "|" "✔ DONE(d)" "✘ CANCEL(c@)")
 
-    (validate-setq
-     org-todo-keyword-faces
-     '(("☛ TODO"   . (:foreground "#ff4500" :weight bold))
-       ("✔ DONE"   . (:foreground "#00ff7f" :weight bold))
-       ("⚑ WAIT"   . (:foreground "#ffff00" :weight bold))
-       ("✘ CANCEL" . (:foreground "#00bfff" :weight bold))))
+    ;; TODO fontification
+    org-todo-keyword-faces
+    '(("☛ TODO"   . (:foreground "#ff4500" :weight bold))
+      ("✔ DONE"   . (:foreground "#00ff7f" :weight bold))
+      ("⚑ WAIT"   . (:foreground "#ffff00" :weight bold))
+      ("✘ CANCEL" . (:foreground "#00bfff" :weight bold)))
     )
 #+END_SRC
 
