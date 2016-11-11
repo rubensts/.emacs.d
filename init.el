@@ -2103,6 +2103,15 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   :demand t
   :after pcache)
 
+;; persistent-scratch
+
+;; [[https://github.com/Fanael/persistent-scratch][persistent-scratch]] preserves the state of scratch buffers accross Emacs sessions
+;; by saving the state to and restoring it from a file.
+
+(use-package persistent-scratch
+  :config
+  (persistent-scratch-setup-default))
+
 ;; recentf
 
 ;; Recentf is a minor mode that builds a list of recently opened files. This list
