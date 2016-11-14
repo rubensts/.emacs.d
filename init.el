@@ -1717,6 +1717,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; Simple library for asynchronous processing in Emacs
 
 (use-package async
+  :demand t
   :config
   (dired-async-mode t)
   (async-bytecomp-package-mode t))
@@ -2224,7 +2225,51 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; mu4e
 
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
-(load "~/my-prj/dotfiles/init-mu4e.el" t)
+
+(use-package mu4e
+  :ensure nil
+  :bind (("C-c m" . mu4e))
+  :config
+  (validate-setq mu4e-maildir "~/Maildir"                ; where it is the mail folder
+                 mail-user-agent 'mu4e-user-agent        ; set mu4e as the default mail agent
+                 mu4e-mu-binary "/usr/local/bin/mu"      ; point to the full binary of the mu
+                 mu4e-get-mail-command "mbsync -a"       ; fetch email using mbsync
+                 mu4e-update-interval 300                ; fetch email in a 5 min interval
+                 mu4e-view-show-images t                 ; show images on email buffer
+                 mu4e-view-show-addresses t              ; show full email address from sender
+                 mu4e-use-fancy-chars t                  ; use 'fancy' non-ascii characters in various places in mu4e
+                 mu4e-attachment-dir  "~/Downloads"      ; save attachments into ~/Downloads
+                 mu4e-sent-messages-behavior 'delete     ; don't save message to Sent Messages, GMail/IMAP will take care of this
+                 mu4e-hide-index-messages t              ; stop showing the "indexing..." message in the minibuffer
+                 mu4e-confirm-quit nil                   ; quit without asking for confirmation
+                 mu4e-change-filenames-when-moving t     ; avoid mbsync breaking with UIDs maildir error
+                 mu4e-compose-signature-auto-include nil
+
+                 mu4e-headers-date-format "%Y-%m-%d %H:%M"       ; date format of the header list
+                 mu4e-headers-time-format "%H:%M"                ; time format of the header list
+                 mu4e-date-format-long "%A %Y-%m-%d %T %z (%Z)"  ; date format in the message view
+
+                 ;; List of headers
+                 mu4e-headers-fields '((:human-date     . 20)
+                                       ;;(:date           . 20)
+                                       (:flags          . 7)
+                                       (:mailing-list   . 15)
+                                       (:from-or-to     . 40)
+                                       (:thread-subject . nil))
+                 )
+
+  ;; use imagemagick, if available
+  (when (fboundp 'imagemagick-register-types)
+    (imagemagick-register-types))
+
+  ;; add to view-actions the option to open html messages with xwidget
+  (add-to-list 'mu4e-view-actions
+               '("xwidget view" . mu4e-action-view-with-xwidget) t)
+
+  ;; Load email accounts using mu4e-contexts
+  ;; https://www.djcbsoftware.nl/code/mu/mu4e/Contexts-example.html
+  (load "~/my-prj/dotfiles/init-mu4e.el" t)
+  )
 
 ;; mu4e-contrib
 
@@ -2232,7 +2277,8 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   :after mu4e
   :ensure nil
   :config
-  ;; Custom marks
+  ;; Changes default headers marks for more cool ones
+  ;; https://github.com/cpitclaudel/.emacs.d/blob/master/init/mode-specific/mu4e.el
   (validate-setq mu4e-headers-draft-mark     '("D" . "📝 ") ;; ✒ ✏
                  mu4e-headers-flagged-mark   '("F" . "🏴 ")
                  mu4e-headers-new-mark       '("N" . "✉ ")
@@ -2244,22 +2290,15 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                  mu4e-headers-encrypted-mark '("x" . "🔐 ")
                  mu4e-headers-signed-mark    '("s" . "🔏 ")
                  mu4e-headers-unread-mark    '("u" . "● ") ;; ★
+                 mu4e-headers-from-or-to-prefix   '("" . "➜ ")
                  mu4e-headers-empty-parent-prefix '("-" . "○")
                  mu4e-headers-first-child-prefix  '("\\" . "┗━❯")
                  mu4e-headers-has-child-prefix    '("+" . "┗◉")
                  mu4e-headers-duplicate-prefix    '("=" . "⚌")
                  mu4e-headers-default-prefix      '("|" . "┃")
-
-                 mu4e-headers-date-format "%Y-%m-%d %H:%M"       ; date format of the header list
-                 mu4e-headers-time-format "%H:%M"                ; time format of the header list
-                 mu4e-date-format-long "%A %Y-%m-%d %T %z (%Z)"  ; date format in the message view
-
-                 mu4e-headers-fields '((:date           . 20)
-                                       (:flags          . 7)
-                                       (:mailing-list   . 15)
-                                       (:from-or-to     . 40)
-                                       (:thread-subject . nil))
                  )
+
+  (set-face-attribute 'mu4e-unread-face nil :inherit 'default :foreground "DarkOrange" :weight 'bold :underline nil)
 
   ;; try to emulate some of the eww key-bindings
   (add-hook 'mu4e-view-mode-hook
@@ -2327,6 +2366,9 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; Decorate mu main view
 
+;; It will highlight and change colors of some caracters on the mu main view. Just
+;; no to leave things too plain ;)
+
 (defun my-mu4e-main-mode-font-lock-rules ()
   (save-excursion
     (goto-char (point-min))
@@ -2335,80 +2377,78 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                            '(face font-lock-variable-name-face)))))
 (add-hook 'mu4e-main-mode-hook 'my-mu4e-main-mode-font-lock-rules)
 
-;; more cool and practical than the default
-(setq mu4e-headers-from-or-to-prefix '("" . "➜ "))
-
 ;; Fontify mu faces
 
-;; [[https://groups.google.com/forum/#!topic/mu-discuss/AJ1A-Z8RMv4][source]]
+;; I've found the mu4e faces listed below [[https://groups.google.com/forum/#!topic/mu-discuss/AJ1A-Z8RMv4][here]]. To follow the inheritance use
+;; ~counsel-describe-face~ or help ~describe-symbol~.
 
-(defgroup mu4e-faces nil
-  "Type faces (fonts) used in mu4e."
-  :group 'mu4e
-  :group 'faces)
+;; (defgroup mu4e-faces nil
+;;   "Type faces (fonts) used in mu4e."
+;;   :group 'mu4e
+;;   :group 'faces)
 
-(defface mu4e-basic-face
-  '((t :inherit font-lock-keyword-face))
-  "Basic Face."
-  :group 'mu4e-faces)
+;; (defface mu4e-basic-face
+;;   '((t :inherit font-lock-keyword-face))
+;;   "Basic Face."
+;;   :group 'mu4e-faces)
 
-(defface mu4e-list-default
-  '((t :inherit mu4e-basic-face))
-  "Basic list Face."
-  :group 'mu4e-faces)
+;; (defface mu4e-list-default
+;;   '((t :inherit mu4e-basic-face))
+;;   "Basic list Face."
+;;   :group 'mu4e-faces)
 
-(defface mu4e-rw-default
-  '((t :inherit mu4e-basic-face))
-  "Basic rw Face."
-  :group 'mu4e-faces)
+;; (defface mu4e-rw-default
+;;   '((t :inherit mu4e-basic-face))
+;;   "Basic rw Face."
+;;   :group 'mu4e-faces)
 
-;; basic face from where the rest inherits
-'(mu4e-basic-face ((t :inherit font-lock-keyword-face :weight normal :foreground "Gray10")))
+;; ;; basic face from where the rest inherits
+;; '(mu4e-basic-face ((t :inherit font-lock-keyword-face :weight normal :foreground "Gray10")))
 
-;; read-write group
-'(mu4e-rw-default ((t :inherit mu4e-basic-face))) ;; face from where all the read/write faces inherits
-'(mu4e-header-face ((t :inherit mu4e-rw-default)))
-'(mu4e-header-marks-face ((t :inherit mu4e-rw-default)))
-'(mu4e-header-title-face ((t :inherit mu4e-rw-default)))
-'(mu4e-header-highlight-face ((t :inherit mu4e-rw-default :foreground "Black" :background "LightGray")))
-'(mu4e-compose-header-face ((t :inherit mu4e-rw-default)))
-'(mu4e-compose-separator-face ((t :inherit mu4e-rw-default :foreground "Gray30" :weight bold)))
-'(mu4e-footer-face  ((t :inherit mu4e-rw-default)))
-'(mu4e-contact-face ((t :inherit mu4e-rw-default   :foreground "Black")))
-'(mu4e-cited-1-face ((t :inherit mu4e-rw-default   :foreground "Gray10")))
-'(mu4e-cited-2-face ((t :inherit mu4e-cited-1-face :foreground "Gray20")))
-'(mu4e-cited-3-face ((t :inherit mu4e-cited-2-face :foreground "Gray30")))
-'(mu4e-cited-4-face ((t :inherit mu4e-cited-3-face :foreground "Gray40")))
-'(mu4e-cited-5-face ((t :inherit mu4e-cited-4-face :foreground "Gray50")))
-'(mu4e-cited-6-face ((t :inherit mu4e-cited-5-face :foreground "Gray60")))
-'(mu4e-cited-7-face ((t :inherit mu4e-cited-6-face :foreground "Gray70")))
-'(mu4e-link-face    ((t :inherit mu4e-rw-default   :foreground "Blue" :weight bold)))
-'(mu4e-system-face  ((t :inherit mu4e-rw-defaul    :foreground "DarkOrchid")))
-'(mu4e-url-number-face ((t :inherit mu4e-rw-default :weight bold)))
-'(mu4e-attach-number-face ((t :inherit mu4e-rw-default :weight bold :foreground "Blue")))
+;; ;; read-write group
+;; '(mu4e-rw-default ((t :inherit mu4e-basic-face))) ;; face from where all the read/write faces inherits
+;; '(mu4e-header-face ((t :inherit mu4e-rw-default)))
+;; '(mu4e-header-marks-face ((t :inherit mu4e-rw-default)))
+;; '(mu4e-header-title-face ((t :inherit mu4e-rw-default)))
+;; '(mu4e-header-highlight-face ((t :inherit mu4e-rw-default :foreground "Black" :background "LightGray")))
+;; '(mu4e-compose-header-face ((t :inherit mu4e-rw-default)))
+;; '(mu4e-compose-separator-face ((t :inherit mu4e-rw-default :foreground "Gray30" :weight bold)))
+;; '(mu4e-footer-face  ((t :inherit mu4e-rw-default)))
+;; '(mu4e-contact-face ((t :inherit mu4e-rw-default   :foreground "Black")))
+;; '(mu4e-cited-1-face ((t :inherit mu4e-rw-default   :foreground "Gray10")))
+;; '(mu4e-cited-2-face ((t :inherit mu4e-cited-1-face :foreground "Gray20")))
+;; '(mu4e-cited-3-face ((t :inherit mu4e-cited-2-face :foreground "Gray30")))
+;; '(mu4e-cited-4-face ((t :inherit mu4e-cited-3-face :foreground "Gray40")))
+;; '(mu4e-cited-5-face ((t :inherit mu4e-cited-4-face :foreground "Gray50")))
+;; '(mu4e-cited-6-face ((t :inherit mu4e-cited-5-face :foreground "Gray60")))
+;; '(mu4e-cited-7-face ((t :inherit mu4e-cited-6-face :foreground "Gray70")))
+;; '(mu4e-link-face    ((t :inherit mu4e-rw-default   :foreground "Blue" :weight bold)))
+;; '(mu4e-system-face  ((t :inherit mu4e-rw-defaul    :foreground "DarkOrchid")))
+;; '(mu4e-url-number-face ((t :inherit mu4e-rw-default :weight bold)))
+;; '(mu4e-attach-number-face ((t :inherit mu4e-rw-default :weight bold :foreground "Blue")))
 
-;; lists (headers) group
-'(mu4e-list-default ((t :inherit mu4e-basic-face))) ;; basic list face from where lists inherits
-'(mu4e-draft-face   ((t :inherit mu4e-list-default)))
-'(mu4e-flagged-face ((t :inherit mu4e-list-default :weight bold :foreground "Black")))
-'(mu4e-forwarded-face ((t :inherit mu4e-list-default)))
-'(mu4e-list-default-face ((t :inherit mu4e-list-default)))
-'(mu4e-title-face    ((t :inherit mu4e-list-default)))
-'(mu4e-trashed-face  ((t :inherit mu4e-list-default)))
-'(mu4e-warning-face  ((t :inherit mu4e-list-default :foreground "OrangeRed1")))
-'(mu4e-modeline-face ((t :inherit mu4e-list-default)))
-'(mu4e-moved-face    ((t :inherit mu4e-list-default)))
-'(mu4e-ok-face       ((t :inherit mu4e-list-default :foreground "ForestGreen")))
-'(mu4e-read-face     ((t :inherit mu4e-list-default :foreground "Gray80")))
-'(mu4e-region-code-face ((t :inherit mu4e-list-default :background "Gray25")))
-'(mu4e-replied-face   ((t :inherit mu4e-list-default :foreground "Black")))
-'(mu4e-unread-face    ((t :inherit mu4e-list-default :foreground "Blue")))
-'(mu4e-highlight-face ((t :inherit mu4e-unread-face)))
+;; ;; lists (headers) group
+;; '(mu4e-list-default ((t :inherit mu4e-basic-face))) ;; basic list face from where lists inherits
+;; '(mu4e-draft-face   ((t :inherit mu4e-list-default)))
+;; '(mu4e-flagged-face ((t :inherit mu4e-list-default :weight bold :foreground "Black")))
+;; '(mu4e-forwarded-face ((t :inherit mu4e-list-default)))
+;; '(mu4e-list-default-face ((t :inherit mu4e-list-default)))
+;; '(mu4e-title-face    ((t :inherit mu4e-list-default)))
+;; '(mu4e-trashed-face  ((t :inherit mu4e-list-default)))
+;; '(mu4e-warning-face  ((t :inherit mu4e-list-default :foreground "OrangeRed1")))
+;; '(mu4e-modeline-face ((t :inherit mu4e-list-default)))
+;; '(mu4e-moved-face    ((t :inherit mu4e-list-default)))
+;; '(mu4e-ok-face       ((t :inherit mu4e-list-default :foreground "ForestGreen")))
+;; '(mu4e-read-face     ((t :inherit mu4e-list-default :foreground "Gray80")))
+;; '(mu4e-region-code-face ((t :inherit mu4e-list-default :background "Gray25")))
+;; '(mu4e-replied-face   ((t :inherit mu4e-list-default :foreground "Black")))
+;; '(mu4e-unread-face    ((t :inherit mu4e-list-default :foreground "Blue")))
+;; '(mu4e-highlight-face ((t :inherit mu4e-unread-face)))
 
-'(mu4e-special-header-value-face ((t :inherit mu4e-contact-face)))
-'(mu4e-header-key-face   ((t :inherit mu4e-contact-face :foreground "Gray50")))
-'(mu4e-header-value-face ((t :inherit mu4e-contact-face)))
-'(message-cited-text     ((t :inherit mu4e-rw-default :foreground "Gray10")))
+;; '(mu4e-special-header-value-face ((t :inherit mu4e-contact-face)))
+;; '(mu4e-header-key-face   ((t :inherit mu4e-contact-face :foreground "Gray50")))
+;; '(mu4e-header-value-face ((t :inherit mu4e-contact-face)))
+;; '(message-cited-text     ((t :inherit mu4e-rw-default :foreground "Gray10")))
 
 ;; elfeed
 
@@ -2926,13 +2966,13 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 (use-package leuven-theme
   :disabled t
-  :config
+  :init
   (load-theme 'leuven t)
   (setq leuven-scale-outline-headlines nil))
 
 (use-package doom-themes
   :disabled t
-  :config
+  :init
   (load-theme 'doom-one t)
   (setq doom-enable-brighter-comments t)      ; comments are easy to see
   (add-hook 'find-file-hook
@@ -2943,23 +2983,23 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 (use-package dracula-theme
   :disabled t
-  :config
+  :init
   (load-theme 'dracula t))
 
-(use-package monokai-theme
+(use-package spacemacs-theme
   :disabled t
-  :config
-  (load-theme 'monokai t))
+  :init
+  (load-theme 'spacemacs-dark t))
 
 (use-package zerodark-theme
   :disabled t
-  :config
+  :init
   (load-theme 'zerodark t)
   (zerodark-setup-modeline-format-alt))
 
 (use-package material-theme
   :demand t
-  :config
+  :init
   (load-theme 'material t))
 
 ;; Fine tuning of the theme
