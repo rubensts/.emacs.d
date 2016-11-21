@@ -139,7 +139,8 @@ saved.
        "emacs ~/.emacs.d/readme.org --batch --eval='(org-babel-tangle)' && notify-send -a 'Emacs' 'init file tangled'" nil 0)))
   ;;(byte-compile-file (concat user-emacs-directory "init.el")))
 
-  (add-hook 'after-save-hook 'rts-tangle-init)
+  ;;(add-hook 'after-save-hook 'rts-tangle-init)
+  (add-hook 'after-save-hook 'org-babel-tangle)
 #+END_SRC
 
 * Packages Setup
@@ -593,6 +594,7 @@ try Emacs, then they are hooked ;)
      org-fontify-done-headline t
      org-fontify-quote-and-verse-blocks t
      org-startup-indented t
+     org-hide-emphasis-markers t             ; hide markup elements, e.g. * *, / /, _ _
      org-cycle-include-plain-lists t
      org-list-allow-alphabetical t
      org-src-fontify-natively t              ; highlights code-blocks natively
@@ -2526,7 +2528,9 @@ prefix) in a popup.
 #+END_SRC
 
 * Tools
-** email
+** COMMENT email - mu
+
+*ATTENTION* This block is disabled for now. I'm testing notmuch as the email solution.
 
 E-mail is set using the following applications:
 
@@ -3046,6 +3050,33 @@ I've found the mu4e faces listed below [[https://groups.google.com/forum/#!topic
      ;; '(mu4e-header-key-face   ((t :inherit mu4e-contact-face :foreground "Gray50")))
      ;; '(mu4e-header-value-face ((t :inherit mu4e-contact-face)))
      ;; '(message-cited-text     ((t :inherit mu4e-rw-default :foreground "Gray10")))
+#+END_SRC
+
+** email - notmuch
+
+E-mail is set using the following applications:
+
+- to retrieve: [[http://isync.sourceforge.net/][isync(mbsync)]]
+- to send: [[http://msmtp.sourceforge.net/][msmtp]]
+- to index and search: notmuch
+- to read (frontend): notmuch
+
+#+BEGIN_SRC emacs-lisp
+  (load "~/my-prj/dotfiles/init-notmuch.el" t)
+#+END_SRC
+
+*** Sending emails asynchronous
+
+This is useful to send emails with attachments and do not block emacs until end
+the transmission. It requires [[https://github.com/jwiegley/emacs-async][emacs-async]].
+
+#+BEGIN_SRC emacs-lisp
+  (use-package smtpmail-async
+    :ensure async
+    :config
+    (validate-setq
+     send-mail-function 'async-smtpmail-send-it
+     message-send-mail-function 'async-smtpmail-send-it))
 #+END_SRC
 
 ** elfeed

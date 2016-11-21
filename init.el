@@ -1,4 +1,5 @@
 
+
 ;; Code blocks on org mode can be tangled with =C-c C-v t=. This is not necessary
 ;; on this =readme.org= file as the tangling is done automatically.
 
@@ -7,6 +8,7 @@
 ;; means that alterations on the configuration have to be done on =readme.org=. Any
 ;; changes made on =~/.emacs.d/init.el= will be overwritten when =readme.org= is
 ;; saved.
+
 
 ;; originaly seen at
 ;; https://github.com/larstvei/dot-emacs/blob/master/init.org
@@ -19,13 +21,16 @@ tangled, and the tangled file is compiled."
      "emacs ~/.emacs.d/readme.org --batch --eval='(org-babel-tangle)' && notify-send -a 'Emacs' 'init file tangled'" nil 0)))
 ;;(byte-compile-file (concat user-emacs-directory "init.el")))
 
-(add-hook 'after-save-hook 'rts-tangle-init)
+;;(add-hook 'after-save-hook 'rts-tangle-init)
+(add-hook 'after-save-hook 'org-babel-tangle)
 
 ;; Debugging
+
 
 (setq message-log-max 10000)
 
 ;; Package management
+
 
 ;; Avoid accidentally using outdated compiled files
 (setq load-prefer-newer t)
@@ -68,6 +73,7 @@ tangled, and the tangled file is compiled."
 
 ;; Initialization
 
+
 (when (version< emacs-version "25")
   (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
 
@@ -75,6 +81,7 @@ tangled, and the tangled file is compiled."
 (setq inhibit-default-init t)
 
 ;; Environment fixup
+
 
 (use-package exec-path-from-shell
   :if (display-graphic-p)
@@ -99,6 +106,7 @@ tangled, and the tangled file is compiled."
 ;; Save the custom settings to a separated file, instead of inside the init.el
 ;; file, avoiding cluttering it.
 
+
 (defconst rts-custom-file (locate-user-emacs-file "custom.el")
   "File used to store settings from Customization UI.")
 
@@ -118,12 +126,14 @@ tangled, and the tangled file is compiled."
 ;; Loads Emacs as a server, allowing it to answer to client calls coming from
 ;; ~emacsclient~.
 
+
 (use-package server
   :init (server-mode))
 
 ;; sensible-defaults.el
 
 ;; Use [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]] for some basic settings.
+
 
 (load-file "~/git/sensible-defaults.el/sensible-defaults.el")
 (sensible-defaults/use-all-settings)
@@ -138,6 +148,7 @@ tangled, and the tangled file is compiled."
 ;; =/tmp= directory (on Unix-like OSs). Here I set the other files that can be used
 ;; between sessions (tramp session, bookmarks, etc) to be saved into
 ;; =~/.emacs.d/tmp=, leaving =~/.emacs.d= nice and clean :)
+
 
 ;; create the temporal directory
 (defvar tmp-directory (concat user-emacs-directory "tmp/"))
@@ -161,6 +172,7 @@ tangled, and the tangled file is compiled."
 ;; Better Defaults
 
 ;; Other personal preferences not covered by [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]].
+
 
 ;; disable menu, tool-bar and scroll-bar
 (when (window-system)
@@ -225,6 +237,7 @@ tangled, and the tangled file is compiled."
 ;; Location
 ;; Set the calendar to current location.
 
+
 (setq calendar-week-start-day  1
       calendar-latitude 43.8
       calendar-longitude 11.0
@@ -232,6 +245,7 @@ tangled, and the tangled file is compiled."
 
 ;; Holidays
 ;; Let Emacs know about holidays of the location.
+
 
 (setq holiday-general-holidays
       '((holiday-fixed 1 1 "Capodanno")
@@ -258,6 +272,7 @@ tangled, and the tangled file is compiled."
 
 ;; Check which OS for keeping compatibility.
 
+
 (defun system-is-mac ()
   (interactive)
   (string-equal system-type "darwin"))
@@ -274,6 +289,7 @@ tangled, and the tangled file is compiled."
 
 ;; Maintain a history of past actions and a reasonable number of lists.
 
+
 (setq-default history-length 1000)
 (setq savehist-file (concat
                      tmp-directory "history")
@@ -284,6 +300,7 @@ tangled, and the tangled file is compiled."
 (savehist-mode t)
 
 ;; Scrolling
+
 
 (setq scroll-margin 0
       scroll-conservatively 100000
@@ -296,6 +313,7 @@ tangled, and the tangled file is compiled."
 
 ;; These functions are useful. Activate them.
 
+
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
@@ -307,6 +325,7 @@ tangled, and the tangled file is compiled."
 ;; setting custom variables. Basically it is a ~setq~ that is aware of the
 ;; custom-set property of a variable.
 
+
 (defmacro csetq (variable value)
   `(funcall (or (get ',variable 'custom-set)
                 'set-default)
@@ -316,6 +335,7 @@ tangled, and the tangled file is compiled."
 
 ;; I hate the default Emacs behavior of split windows which just splits the window
 ;; but doesn’t go there.
+
 
 (defun split-below-and-move ()
   (interactive)
@@ -334,6 +354,7 @@ tangled, and the tangled file is compiled."
 
 ;; This function, from [[http://emacsredux.com/blog/2013/05/22/smarter-navigation-to-the-beginning-of-a-line/][emacsredux]] blog, defines a better start of line and remaps
 ;; ~C-a~ for it.
+
 
 (defun smarter-move-beginning-of-line (arg)
   "Move point back to indentation of beginning of line.
@@ -369,9 +390,11 @@ point reaches the beginning or end of the buffer, stop there."
 ;; Change the key-binding to kill the current buffer instead of asking which one to
 ;; kill. Very good tip taken from [[http://pragmaticemacs.com/emacs/dont-kill-buffer-kill-this-buffer-instead/][Pragmaticemacs]].
 
+
 (global-set-key (kbd "C-x k") 'kill-this-buffer)
 
 ;; Org header IDs
+
 
 (defun my/copy-id-to-clipboard() "Copy the ID property value to killring,
 if no ID is there then create a new unique ID.
@@ -391,6 +414,7 @@ text and copying to the killring."
 
 ;; general settings
 
+
 (use-package org
   :ensure org-plus-contrib
   :bind  (("C-c a" . org-agenda-list)
@@ -407,6 +431,7 @@ text and copying to the killring."
    org-fontify-done-headline t
    org-fontify-quote-and-verse-blocks t
    org-startup-indented t
+   org-hide-emphasis-markers t             ; hide markup elements, e.g. * *, / /, _ _
    org-cycle-include-plain-lists t
    org-list-allow-alphabetical t
    org-src-fontify-natively t              ; highlights code-blocks natively
@@ -435,6 +460,7 @@ text and copying to the killring."
 
 ;; org-clock
 
+
 (use-package org-clock
   :ensure org-plus-contrib
   :demand t
@@ -451,6 +477,7 @@ text and copying to the killring."
    org-clock-report-include-clocking-task t)) ; include current clocking task in clock reports
 
 ;; org-capture-templates
+
 
 (use-package org-protocol
   :ensure org-plus-contrib
@@ -507,6 +534,7 @@ text and copying to the killring."
 
 ;; org-bullets
 
+
 (use-package org-bullets
   :demand t
   :after org-plug-contrib
@@ -526,6 +554,7 @@ text and copying to the killring."
 
 ;; ox.el
 
+
 (use-package ox
   :ensure org-plus-contrib
   :config
@@ -540,6 +569,7 @@ text and copying to the killring."
 ;; https://github.com/kawabata/ox-pandoc
 ;; http://www.rousette.org.uk/blog/archives/org-mode-and-pandoc/ Keeping a lab book
 ;; with org-mode http://informatica.boccaperta.com/m-x-emacs-ox-pandoc/
+
 
 (use-package ox-pandoc
   :after org-plus-contrib
@@ -562,6 +592,7 @@ text and copying to the killring."
 ;; org-babel
 
 ;; Babel is Org-mode’s ability to execute source code within Org-mode documents.
+
 
 (use-package ob
   :ensure org-plus-contrib
@@ -589,6 +620,7 @@ text and copying to the killring."
            ))))
 
 ;; main configuration
+
 
 (use-package hydra
   :init
@@ -1254,6 +1286,7 @@ text and copying to the killring."
 
 ;; markdown
 
+
 (global-set-key [f9] 'dh-hydra-markdown-mode/body)
 
 (defhydra dh-hydra-markdown-mode (:hint nil)
@@ -1292,6 +1325,7 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
 
 ;; moving
 
+
 (global-set-key (kbd "C-n") 'hydra-move/body)
 
 (defhydra hydra-move (:body-pre (next-line))
@@ -1314,6 +1348,7 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
   ("l" recenter-top-bottom))
 
 ;; org templates
+
 
 (define-key org-mode-map "<" (lambda () (interactive)
                                (if (looking-back "^")
@@ -1368,6 +1403,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; windows
 
+
 (global-set-key (kbd "C-M-o") 'hydra-window/body)
 
 (defhydra hydra-window (:color red :columns nil)
@@ -1404,6 +1440,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; zoom
 
+
 (defhydra hydra-zoom (global-map "<f2>")
   "zoom"
   ("g" text-scale-increase "in")
@@ -1413,6 +1450,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   ("1" (text-scale-set 0) nil :bind nil :exit t))
 
 ;; launcher
+
 
 (defhydra hydra-launcher (:color blue :columns 2)
   "Launch"
@@ -1426,6 +1464,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; Rectangle edit mode is one of the unique features of Emacs (and Vim) and this
 ;; hydra makes it easier to interact with it.
+
 
 (global-set-key (kbd "C-x SPC") 'hydra-rectangle/body)
 
@@ -1457,9 +1496,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; misc
 
+
 (global-set-key (kbd "C-M-k") 'hydra-pause-resume)
 
 ;; ivy
+
 
 (use-package swiper
   :demand t
@@ -1527,6 +1568,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; counsel
 
+
 (use-package counsel
   :after swiper
   :bind (("M-x"     . counsel-M-x)
@@ -1556,6 +1598,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; hydra-ivy replacement
 
 ;; A Hydra for ivy/swiper. It helps on ~dired~ also. Check details [[http://oremacs.com/2015/03/26/hydra-ivy-swiper/][here]].
+
 
 (define-key ivy-minibuffer-map (kbd "C-o") 'hydra-ivy/body)
 
@@ -1648,6 +1691,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; | n, <right> | persp-next          | Switch to next perspective                                      |
 ;; | p, <left>  | persp-prev          | Switch to previous perspective                                  |
 
+
 ;;(use-package projectile
 ;;  :ensure t
 ;;  :config
@@ -1684,12 +1728,14 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; magit
 
+
 (use-package magit
   :config
   (setq magit-completing-read-function 'ivy-completing-read
         magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1))
 
 ;; ace-window
+
 
 (use-package ace-window)
 
@@ -1698,6 +1744,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; [[https://github.com/Wilfred/ag.el][Ag.el]] allows you to search using [[https://github.com/ggreer/the_silver_searcher][ag (The Silver Searcher)]] from inside Emacs. You
 ;; can filter by file type, edit results inline, or find files.
 
+
 (use-package ag
   :config
   (validate-setq ag-highlight-search t))
@@ -1705,6 +1752,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; anzu
 ;; anzu provides a minor mode which displays current match and total matches
 ;; information in the mode-line in various search modes.
+
 
 (use-package anzu
   :bind (("M-%" . anzu-query-replace)
@@ -1716,6 +1764,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; Simple library for asynchronous processing in Emacs
 
+
 (use-package async
   :demand t
   :config
@@ -1726,6 +1775,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; avy is a GNU Emacs package for jumping to visible text using a char-based
 ;; decision tree. See also ace-jump-mode and vim-easymotion - avy uses the same
 ;; idea.
+
 
 (use-package avy
   :bind (("C-:" . avy-goto-char)
@@ -1751,6 +1801,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; Never lose your cursor again. Whenever the window scrolls a light will shine on
 ;; top of your cursor so you know where it is.
 
+
 (use-package beacon
   :demand t
   :config
@@ -1760,6 +1811,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; bookmarks
 ;; Bookmarks to files and directories
+
 
 (use-package bookmark
   :config
@@ -1779,6 +1831,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; The CAPF back-end provides a bridge to the standard
 ;; completion-at-point-functions facility, and thus works with any major mode that
 ;; defines a proper completion function.
+
 
 (use-package company
   :bind (("C-c /" . company-files))                      ; force complete file names on "C-c /" key
@@ -1829,6 +1882,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; [[https://github.com/bbatsov/crux][crux]] is a Collection of Ridiculously Useful eXtensions for Emacs. crux bundles a
 ;; few useful interactive commands to enhance your overall Emacs experience.
 
+
 (use-package crux)
 
 ;; diff-hl
@@ -1845,6 +1899,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; | diff-hl-previous-hunk  | C-x v [      |
 ;; | diff-hl-next-hunk      | C-x v ]      |
 
+
 (use-package diff-hl
   :demand t
   :config
@@ -1856,6 +1911,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; dired
 
 ;; Load up the assorted dired extensions.
+
 
 (use-package dired-x
   :ensure nil)
@@ -1911,6 +1967,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; | C-g   |           | abort                                                                                                       |
 ;; | ?     |           | help                                                                                                        |
 
+
 (use-package easy-kill
   :bind (([remap kill-ring-save] . easy-kill)
          ([remap mark-sexp] . easy-mark)))
@@ -1923,6 +1980,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; GNU utility ~diff~, which is called by ~ediff~, to treat the input files as text
 ;; files. This is necessary as the utility ~diff~ doesn't understand unicode, and
 ;; sees unicode encoded files as binary files ([[http://stackoverflow.com/questions/10503937/emacs-ediff-foreign-character-sets-and-text-file-encodings][stackoverflow]]).
+
 
 (use-package ediff
   :ensure nil
@@ -1966,10 +2024,12 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; [[https://github.com/magnars/expand-region.el][Expand region]] increases the selected region by semantic units. Just keep
 ;; pressing the key until it selects what you want.
 
+
 (use-package expand-region)
 
 ;; fill-column-indicator
 ;; Toggle the vertical column that indicates the fill threshold.
+
 
 (use-package fill-column-indicator
   :config
@@ -2002,6 +2062,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; | M-n        | fixmee-goto-next-by-position ; only when the point is    |
 ;; | M-p        | fixmee-goto-previous-by-position ; inside a fixme notice |
 
+
 (use-package wiki-nav
   :config
   (global-wiki-nav-mode 1))
@@ -2015,9 +2076,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;;  Fuzzy matching for Emacs ... a la Sublime Text. It is needed for fuzzy matching
 ;;  in swiper + avy.
 
+
 (use-package flx)
 
 ;; flycheck
+
 
 (use-package flycheck
   :init (global-flycheck-mode)
@@ -2047,6 +2110,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; I use [[http://proselint.com/][proselint]] to check my prose for common errors. This creates a flycheck
 ;; checker that runs proselint in texty buffers and displays my errors.
 
+
 (flycheck-define-checker proselint
   "A linter for prose."
   :command ("proselint" source-inplace)
@@ -2064,9 +2128,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; [[https://github.com/ppareit/graphviz-dot-mode][graphviz-dot-mode]] is a mode for the DOT language, used by =graphviz=.
 
+
 (use-package graphviz-dot-mode)
 
 ;; neotree
+
 
 (use-package neotree
   :bind (("<f6>" . neotree-toggle))
@@ -2077,6 +2143,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; Project for modernizing Emacs’ Package Menu. With package ratings, usage
 ;; statistics, customizability, and more.
 
+
 (use-package paradox
   :config
   (setq paradox-github-token t
@@ -2084,6 +2151,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
         paradox-execute-asynchronously t))
 
 ;; pass
+
 
 (use-package pass
   :ensure t)
@@ -2097,6 +2165,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; [[https://github.com/rolandwalker/persistent-soft][persistent-soft]] is a wrapper around pcache.el, providing "soft" fetch and store routines
 ;; which never throw an error, but instead return nil on failure.
 
+
 (use-package pcache
   :demand t)
 
@@ -2109,6 +2178,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; [[https://github.com/Fanael/persistent-scratch][persistent-scratch]] preserves the state of scratch buffers accross Emacs sessions
 ;; by saving the state to and restoring it from a file.
 
+
 (use-package persistent-scratch
   :config
   (persistent-scratch-setup-default))
@@ -2120,6 +2190,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; menu. Here it's set to work together with ivy-switch-buffer.
 
 ;; [[https://github.com/abo-abo/swiper/releases][source 1]] - [[https://www.masteringemacs.org/article/find-files-faster-recent-files-package][source 2]] - [[http://emacsredux.com/blog/2013/04/05/recently-visited-files/][source 3]]
+
 
 (use-package recentf
   :config
@@ -2136,6 +2207,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; Nicer naming of buffers for files with identical names. [[https://github.com/purcell/emacs.d/blob/master/lisp/init-uniquify.el][source]]
 
+
 (use-package uniquify
   :ensure nil
   :config
@@ -2150,6 +2222,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; C-/ undo
 ;; S-C-/ redo
 
+
 (use-package undo-tree
   :init
   (global-undo-tree-mode))
@@ -2159,6 +2232,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; It provides minor mode volatile-highlights-mode, which brings visual feedback
 ;; to some operations (eg. pasting, etc) by highlighting portions relating to the
 ;; operations.
+
 
 (use-package volatile-highlights
   :config
@@ -2172,6 +2246,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; The defun *window-numbering-install-mode-line* set below is to make
 ;; window-numbering work together with spaceline, overriding its own modeline
 ;; display function.
+
 
 (use-package window-numbering
   :init   (window-numbering-mode)
@@ -2196,6 +2271,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; | C-c C-k: | Discard all changes and exit.                       |
 ;; | C-x C-q: | Exit wgrep mode.                                    |
 
+
 (use-package wgrep
   :config
   (progn
@@ -2208,6 +2284,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; which-key
 ;; Displays the key bindings following your currently entered incomplete command (a
 ;; prefix) in a popup.
+
 
 (use-package which-key
   :init (which-key-mode)
@@ -2222,140 +2299,23 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                   ("deletechar"          . "⌦")
                   ("RET"                 . "⏎"))))
 
-;; mu4e
+;; email - notmuch
 
-(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
+;; E-mail is set using the following applications:
 
-(use-package mu4e
-  :ensure nil
-  :bind (("C-c m" . mu4e))
-  :config
-  (validate-setq mu4e-maildir "~/Maildir"                ; where it is the mail folder
-                 mail-user-agent 'mu4e-user-agent        ; set mu4e as the default mail agent
-                 mu4e-mu-binary "/usr/local/bin/mu"      ; point to the full binary of the mu
-                 mu4e-get-mail-command "mbsync -a"       ; fetch email using mbsync
-                 mu4e-update-interval 300                ; fetch email in a 5 min interval
-                 mu4e-view-show-images t                 ; show images on email buffer
-                 mu4e-view-show-addresses t              ; show full email address from sender
-                 mu4e-use-fancy-chars t                  ; use 'fancy' non-ascii characters in various places in mu4e
-                 mu4e-attachment-dir  "~/Downloads"      ; save attachments into ~/Downloads
-                 mu4e-sent-messages-behavior 'delete     ; don't save message to Sent Messages, GMail/IMAP will take care of this
-                 mu4e-hide-index-messages t              ; stop showing the "indexing..." message in the minibuffer
-                 mu4e-confirm-quit nil                   ; quit without asking for confirmation
-                 mu4e-change-filenames-when-moving t     ; avoid mbsync breaking with UIDs maildir error
-                 mu4e-compose-signature-auto-include nil
+;; - to retrieve: [[http://isync.sourceforge.net/][isync(mbsync)]]
+;; - to send: [[http://msmtp.sourceforge.net/][msmtp]]
+;; - to index and search: notmuch
+;; - to read (frontend): notmuch
 
-                 mu4e-headers-date-format "%Y-%m-%d %H:%M"       ; date format of the header list
-                 mu4e-headers-time-format "%H:%M"                ; time format of the header list
-                 mu4e-date-format-long "%A %Y-%m-%d %T %z (%Z)"  ; date format in the message view
 
-                 ;; List of headers
-                 mu4e-headers-fields '((:human-date     . 20)
-                                       ;;(:date           . 20)
-                                       (:flags          . 7)
-                                       (:mailing-list   . 15)
-                                       (:from-or-to     . 40)
-                                       (:thread-subject . nil))
-                 )
-
-  ;; use imagemagick, if available
-  (when (fboundp 'imagemagick-register-types)
-    (imagemagick-register-types))
-
-  ;; add to view-actions the option to open html messages with xwidget
-  (add-to-list 'mu4e-view-actions
-               '("xwidget view" . mu4e-action-view-with-xwidget) t)
-
-  ;; Load email accounts using mu4e-contexts
-  ;; https://www.djcbsoftware.nl/code/mu/mu4e/Contexts-example.html
-  (load "~/my-prj/dotfiles/init-mu4e.el" t)
-  )
-
-;; mu4e-contrib
-
-(use-package mu4e-contrib
-  :after mu4e
-  :ensure nil
-  :config
-  ;; Changes default headers marks for more cool ones
-  ;; https://github.com/cpitclaudel/.emacs.d/blob/master/init/mode-specific/mu4e.el
-  (validate-setq mu4e-headers-draft-mark     '("D" . "📝 ") ;; ✒ ✏
-                 mu4e-headers-flagged-mark   '("F" . "🏴 ")
-                 mu4e-headers-new-mark       '("N" . "✉ ")
-                 mu4e-headers-passed-mark    '("P" . "→ ") ;; ↪
-                 mu4e-headers-replied-mark   '("R" . "← ")
-                 mu4e-headers-seen-mark      '("S" . "🗸")  ;; ✓ 🗸 ✔
-                 mu4e-headers-trashed-mark   '("T" . "✗ ") ;; 🗑
-                 mu4e-headers-attach-mark    '("a" . "📎 ")
-                 mu4e-headers-encrypted-mark '("x" . "🔐 ")
-                 mu4e-headers-signed-mark    '("s" . "🔏 ")
-                 mu4e-headers-unread-mark    '("u" . "● ") ;; ★
-                 mu4e-headers-from-or-to-prefix   '("" . "➜ ")
-                 mu4e-headers-empty-parent-prefix '("-" . "○")
-                 mu4e-headers-first-child-prefix  '("\\" . "┗━❯")
-                 mu4e-headers-has-child-prefix    '("+" . "┗◉")
-                 mu4e-headers-duplicate-prefix    '("=" . "⚌")
-                 mu4e-headers-default-prefix      '("|" . "┃")
-                 )
-
-  (set-face-attribute 'mu4e-unread-face nil :inherit 'default :foreground "DarkOrange" :weight 'bold :underline nil)
-
-  ;; try to emulate some of the eww key-bindings
-  (add-hook 'mu4e-view-mode-hook
-            (lambda ()
-              (local-set-key (kbd "<tab>") 'shr-next-link)
-              (local-set-key (kbd "<backtab>") 'shr-previous-link))))
-
-;; org-mu4e
-
-(use-package org-mu4e
-  :after mu4e
-  :ensure nil)
-
-;; mu4e-alert
-
-(use-package mu4e-alert
-  :after mu4e
-  :init
-  (add-hook 'after-init-hook
-            #'mu4e-alert-enable-notifications)       ; enable notifications
-  (add-hook 'after-init-hook
-            #'mu4e-alert-enable-mode-line-display)   ; display unread email count in the mode-line
-  :config
-  (validate-setq
-   mu4e-alert-email-notification-types '(count))     ; display only total number of unread emails
-
-  ;; Set notification style accordingly to the OS
-  (cond ((eq system-type 'gnu/linux)
-         (mu4e-alert-set-default-style 'libnotify)
-         ;;(mu4e-alert-set-default-style 'notifications) ; alternative
-         )
-        ((eq system-type 'darwin)
-         (mu4e-alert-set-default-style 'notifier)
-         ;; (mu4e-alert-set-default-style 'growl)        ; alternative
-         ))
-
-  (alert-add-rule
-   :category "mu4e-alert"
-   :predicate (lambda (_) (string-match-p "^mu4e-" (symbol-name major-mode)))
-   :continue t))
-
-;; mu4e-maildirs-extension
-
-;; It adds a maildir summary in mu4e-main-view.
-
-(use-package mu4e-maildirs-extension
-  :after mu4e
-  :config
-  (mu4e-maildirs-extension)
-  (validate-setq mu4e-maildirs-extension-maildir-separator    "*"
-                 mu4e-maildirs-extension-submaildir-separator "✉"
-                 mu4e-maildirs-extension-action-text          nil))
+(load "~/my-prj/dotfiles/init-notmuch.el" t)
 
 ;; Sending emails asynchronous
 
 ;; This is useful to send emails with attachments and do not block emacs until end
 ;; the transmission. It requires [[https://github.com/jwiegley/emacs-async][emacs-async]].
+
 
 (use-package smtpmail-async
   :ensure async
@@ -2363,92 +2323,6 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
   (validate-setq
    send-mail-function 'async-smtpmail-send-it
    message-send-mail-function 'async-smtpmail-send-it))
-
-;; Decorate mu main view
-
-;; It will highlight and change colors of some caracters on the mu main view. Just
-;; no to leave things too plain ;)
-
-(defun my-mu4e-main-mode-font-lock-rules ()
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "\\[\\([a-zA-Z]\\{1,2\\}\\)\\]" nil t)
-      (add-text-properties (match-beginning 1) (match-end 1)
-                           '(face font-lock-variable-name-face)))))
-(add-hook 'mu4e-main-mode-hook 'my-mu4e-main-mode-font-lock-rules)
-
-;; Fontify mu faces
-
-;; I've found the mu4e faces listed below [[https://groups.google.com/forum/#!topic/mu-discuss/AJ1A-Z8RMv4][here]]. To follow the inheritance use
-;; ~counsel-describe-face~ or help ~describe-symbol~.
-
-;; (defgroup mu4e-faces nil
-;;   "Type faces (fonts) used in mu4e."
-;;   :group 'mu4e
-;;   :group 'faces)
-
-;; (defface mu4e-basic-face
-;;   '((t :inherit font-lock-keyword-face))
-;;   "Basic Face."
-;;   :group 'mu4e-faces)
-
-;; (defface mu4e-list-default
-;;   '((t :inherit mu4e-basic-face))
-;;   "Basic list Face."
-;;   :group 'mu4e-faces)
-
-;; (defface mu4e-rw-default
-;;   '((t :inherit mu4e-basic-face))
-;;   "Basic rw Face."
-;;   :group 'mu4e-faces)
-
-;; ;; basic face from where the rest inherits
-;; '(mu4e-basic-face ((t :inherit font-lock-keyword-face :weight normal :foreground "Gray10")))
-
-;; ;; read-write group
-;; '(mu4e-rw-default ((t :inherit mu4e-basic-face))) ;; face from where all the read/write faces inherits
-;; '(mu4e-header-face ((t :inherit mu4e-rw-default)))
-;; '(mu4e-header-marks-face ((t :inherit mu4e-rw-default)))
-;; '(mu4e-header-title-face ((t :inherit mu4e-rw-default)))
-;; '(mu4e-header-highlight-face ((t :inherit mu4e-rw-default :foreground "Black" :background "LightGray")))
-;; '(mu4e-compose-header-face ((t :inherit mu4e-rw-default)))
-;; '(mu4e-compose-separator-face ((t :inherit mu4e-rw-default :foreground "Gray30" :weight bold)))
-;; '(mu4e-footer-face  ((t :inherit mu4e-rw-default)))
-;; '(mu4e-contact-face ((t :inherit mu4e-rw-default   :foreground "Black")))
-;; '(mu4e-cited-1-face ((t :inherit mu4e-rw-default   :foreground "Gray10")))
-;; '(mu4e-cited-2-face ((t :inherit mu4e-cited-1-face :foreground "Gray20")))
-;; '(mu4e-cited-3-face ((t :inherit mu4e-cited-2-face :foreground "Gray30")))
-;; '(mu4e-cited-4-face ((t :inherit mu4e-cited-3-face :foreground "Gray40")))
-;; '(mu4e-cited-5-face ((t :inherit mu4e-cited-4-face :foreground "Gray50")))
-;; '(mu4e-cited-6-face ((t :inherit mu4e-cited-5-face :foreground "Gray60")))
-;; '(mu4e-cited-7-face ((t :inherit mu4e-cited-6-face :foreground "Gray70")))
-;; '(mu4e-link-face    ((t :inherit mu4e-rw-default   :foreground "Blue" :weight bold)))
-;; '(mu4e-system-face  ((t :inherit mu4e-rw-defaul    :foreground "DarkOrchid")))
-;; '(mu4e-url-number-face ((t :inherit mu4e-rw-default :weight bold)))
-;; '(mu4e-attach-number-face ((t :inherit mu4e-rw-default :weight bold :foreground "Blue")))
-
-;; ;; lists (headers) group
-;; '(mu4e-list-default ((t :inherit mu4e-basic-face))) ;; basic list face from where lists inherits
-;; '(mu4e-draft-face   ((t :inherit mu4e-list-default)))
-;; '(mu4e-flagged-face ((t :inherit mu4e-list-default :weight bold :foreground "Black")))
-;; '(mu4e-forwarded-face ((t :inherit mu4e-list-default)))
-;; '(mu4e-list-default-face ((t :inherit mu4e-list-default)))
-;; '(mu4e-title-face    ((t :inherit mu4e-list-default)))
-;; '(mu4e-trashed-face  ((t :inherit mu4e-list-default)))
-;; '(mu4e-warning-face  ((t :inherit mu4e-list-default :foreground "OrangeRed1")))
-;; '(mu4e-modeline-face ((t :inherit mu4e-list-default)))
-;; '(mu4e-moved-face    ((t :inherit mu4e-list-default)))
-;; '(mu4e-ok-face       ((t :inherit mu4e-list-default :foreground "ForestGreen")))
-;; '(mu4e-read-face     ((t :inherit mu4e-list-default :foreground "Gray80")))
-;; '(mu4e-region-code-face ((t :inherit mu4e-list-default :background "Gray25")))
-;; '(mu4e-replied-face   ((t :inherit mu4e-list-default :foreground "Black")))
-;; '(mu4e-unread-face    ((t :inherit mu4e-list-default :foreground "Blue")))
-;; '(mu4e-highlight-face ((t :inherit mu4e-unread-face)))
-
-;; '(mu4e-special-header-value-face ((t :inherit mu4e-contact-face)))
-;; '(mu4e-header-key-face   ((t :inherit mu4e-contact-face :foreground "Gray50")))
-;; '(mu4e-header-value-face ((t :inherit mu4e-contact-face)))
-;; '(message-cited-text     ((t :inherit mu4e-rw-default :foreground "Gray10")))
 
 ;; elfeed
 
@@ -2479,6 +2353,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;;   | u     | mark selected entries as unread                      |
 ;;   | +     | add a specific tag to selected entries               |
 ;;   | -     | remove a specific tag from selected entries          |
+
 
 (use-package elfeed
   :commands elfeed
@@ -2603,6 +2478,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; Just select the text you want to be searched on the internet and press =C-c /=
 ;; (default), then choose the engine.
 
+
 (use-package engine-mode
   :config
   (defengine duckduckgo
@@ -2645,6 +2521,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; Hunspell will search for a dictionary called ~en_US~ in the path specified by =$DICPATH=.
 
+
 (use-package flyspell
   :demand t
   :config
@@ -2667,6 +2544,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; Switch between the most used dictionaries in my case.
 
+
 (defun rts-switch-dictionary () (interactive)
        (let* ((dic ispell-current-dictionary)
               (change (if (string= dic "en_GB") "it_IT" "en_GB")))
@@ -2680,6 +2558,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; Flyspell usually slows down the responsiveness when writing texts. [[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]]
 ;; is used to improve *Flyspell* responsiveness using idle timers.
 
+
 (use-package flyspell-lazy
   :demand t
   :after flyspell
@@ -2690,6 +2569,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; [[https://github.com/xuchunyang/flyspell-popup][Flyspell-popup]] is used to correct words with Flyspell in popup menus.
 
+
 (use-package flyspell-popup
   :after flyspell
   :bind (:map flyspell-mode-map
@@ -2699,6 +2579,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; [[https://www.languagetool.org/][LanguageTool]] is an Open Source proof­reading program for English, French,
 ;; German, Polish, and more than 20 other languages.
+
 
 (use-package langtool
   :bind (("C-x 4 w" . langtool-check)                   ; check buffer and show warnings
@@ -2738,6 +2619,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; highlights text based on a set of weasel-words, passive-voice and duplicate
 ;; words. [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might’s weaselwords scripts]] inspired this mode.
 
+
 (use-package writegood-mode
   :disabled t
   :config
@@ -2751,6 +2633,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; - [[https://github.com/Malabarba/aggressive-indent-mode][agressive-indent-mode]] keeps the code always indented.
 ;; - [[https://github.com/DarthFennec/highlight-indent-guides][highligh-indent-guides]] minor mode to highlight indentation. I prefer it over
 ;;   [[https://github.com/zk-phi/indent-guide][indent-guide]] (too slow when I tested it)
+
 
 (use-package aggressive-indent
   :demand t
@@ -2775,6 +2658,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;;   about it. There are good tips [[https://ebzzry.github.io/emacs-pairs.html][here]].
 
 ;; - [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] puts different colours on parenthesis depending on their depth.
+
 
 (use-package smartparens-config
     :ensure smartparens
@@ -2801,11 +2685,13 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; characters are naturally still visible, but in a faint way, so they can be
 ;; easily ignored.
 
+
 (use-package adoc-mode
   :config
   (autoload 'adoc-mode "adoc-mode" nil t))
 
 ;; jinja2
+
 
 (use-package jinja2-mode
   :mode "\\.j2\\'")
@@ -2813,6 +2699,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; json-mode
 
 ;; Installs json-mode and make its reformat keybinding match the global default.
+
 
 (use-package json-mode
   :commands json-mode
@@ -2822,9 +2709,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; markdown
 
+
 (use-package markdown-mode)
 
 ;; slime
+
 
 (use-package slime
   :config
@@ -2839,6 +2728,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; yaml
 
+
 (use-package yaml-mode)
 
 ;; eshell
@@ -2851,6 +2741,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; The ~keychain-environmet~ is to be used together with [[http://www.funtoo.org/Keychain][keychain]]. It loads the
 ;; file "$HOME/.keychain/$HOSTNAME-sh" and parses it for the SSH_AUTH_SOCK and
 ;; SSH_AUTH_PID variables.
+
 
 (use-package keychain-environment
   :config
@@ -2903,6 +2794,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; :bind (:map eshell-mode-map
 ;;             ("C-c C-l" . mu-counsel-esh-history))
 
+
 (defun mu-counsel-esh-history ()
       "Browse Eshell history."
       (interactive)
@@ -2920,9 +2812,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; tramp
 
+
 (setq tramp-default-method "ssh")
 
 ;; ansible
+
 
 (use-package ansible
   :init
@@ -2937,9 +2831,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
 ;; puppet
 
+
 (use-package puppet-mode)
 
 ;; vagrant
+
 
 (use-package vagrant)
 
@@ -2963,6 +2859,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; - [[https://github.com/fniessen/emacs-leuven-theme][leuven-theme]]
 ;; - [[https://github.com/bbatsov/zenburn-emacs][zenburn-theme]]
 ;; - [[https://github.com/nashamri/spacemacs-theme][spacemacs-theme]]
+
 
 (use-package leuven-theme
   :disabled t
@@ -3009,6 +2906,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 ;; the ~material-theme~, which is the one I'm using. If you want to change the
 ;; ~solarized-theme~ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
 
+
 (custom-theme-set-faces
  'material
  `(org-level-1 ((t (:inherit outline-1
@@ -3030,6 +2928,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
  )
 
 ;; Fonts
+
 
 ;; (cond ((eq system-type 'gnu/linux)
 ;;        (set-face-attribute 'default nil
@@ -3104,6 +3003,7 @@ symbols, emojis, greek letters, as well as fall backs for."
 ;; [[https://github.com/domtronn/all-the-icons.el][all-the-icons]] is a utility package to collect various Icon Fonts and propertize
 ;; them within Emacs.
 
+
 (use-package all-the-icons
   :demand t)
 
@@ -3115,6 +3015,7 @@ symbols, emojis, greek letters, as well as fall backs for."
 ;; It is similar in purpose to DiminishedModes but it accounts for major modes as
 ;; well as minor modes, and also incorporates the necessary ‘eval-after-load’ call
 ;; for minor modes, which makes the configuration simpler.
+
 
 (use-package delight
   :demand t
@@ -3152,6 +3053,7 @@ symbols, emojis, greek letters, as well as fall backs for."
 
 ;; spaceline
 
+
 (use-package spaceline
   :config
   (setq powerline-default-separator 'wave
@@ -3167,6 +3069,7 @@ symbols, emojis, greek letters, as well as fall backs for."
 ;; Other details
 
 ;; Better looking break lines.
+
 
 (use-package page-break-lines
   :init (global-page-break-lines-mode))
