@@ -2878,6 +2878,11 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
             'doom-brighten-minibuffer)        ; brighter minibuffer when active
   (require 'doom-neotree))                    ; custom neotree theme
 
+(use-package apropospriate-theme
+  :disabled t
+  :init
+  (load-theme 'apropospriate-dark t))
+
 (use-package dracula-theme
   :disabled t
   :init
