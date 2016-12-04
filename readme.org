@@ -139,8 +139,7 @@ saved.
        "emacs ~/.emacs.d/readme.org --batch --eval='(org-babel-tangle)' && notify-send -a 'Emacs' 'init file tangled'" nil 0)))
   ;;(byte-compile-file (concat user-emacs-directory "init.el")))
 
-  ;;(add-hook 'after-save-hook 'rts-tangle-init)
-  (add-hook 'after-save-hook 'org-babel-tangle)
+  (add-hook 'after-save-hook 'rts-tangle-init)
 #+END_SRC
 
 * Packages Setup
@@ -578,48 +577,52 @@ try Emacs, then they are hooked ;)
 *** general settings
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org
-    :ensure org-plus-contrib
-    :bind  (("C-c a" . org-agenda-list)
-            ("C-c c" . org-capture)
-            ("C-c l" . org-store-link)
-            ;;("C-c f" . org-cycle-agenda-files)
-            ;;("C-c s" . org-search-view)
-            ("C-c t" . org-todo-list))
-    :config
-    (validate-setq
-     org-tags-column -80
-     org-ellipsis "⤵"                        ; ⬎, ⤷, ⤵, ⚡
-     org-fontify-whole-heading-line t        ; fontify the whole line for headings
-     org-fontify-done-headline t
-     org-fontify-quote-and-verse-blocks t
-     org-startup-indented t
-     org-hide-emphasis-markers t             ; hide markup elements, e.g. * *, / /, _ _
-     org-cycle-include-plain-lists t
-     org-list-allow-alphabetical t
-     org-src-fontify-natively t              ; highlights code-blocks natively
-     org-src-tab-acts-natively t             ; in code-blocks TAB acts natively language major mode
-     org-src-window-setup 'current-window    ; open code-blocks in the current window
-     org-confirm-babel-evaluate nil          ; don't ask for confirmation when compiling code-blocks
-     org-latex-create-formula-image-program 'imagemagick   ; preview latex fragments
+(use-package org
+  :ensure org-plus-contrib
+  :bind  (("C-c a" . org-agenda-list)
+          ("C-c c" . org-capture)
+          ("C-c l" . org-store-link)
+          ;;("C-c f" . org-cycle-agenda-files)
+          ;;("C-c s" . org-search-view)
+          ("C-c t" . org-todo-list))
+  :config
+  (validate-setq
+   org-tags-column -100                    ; column to which the tags have to be indented
+   org-ellipsis "⤵"                        ; ⬎, ⤷, ⤵, ⚡
+   org-fontify-whole-heading-line t        ; fontify the whole line for headings
+   org-fontify-done-headline t
+   org-fontify-quote-and-verse-blocks t
+   org-startup-indented t
+   org-hide-emphasis-markers t             ; hide markup elements, e.g. * *, / /, _ _
+   org-cycle-include-plain-lists t
+   org-list-allow-alphabetical t
+   org-latex-create-formula-image-program 'imagemagick   ; preview latex fragments
 
-     ;; Files location
-     org-directory "~/org"
-     org-default-notes-file (concat org-directory "/notes.org")
-     org-agenda-files (list "~/org/todo.org"
-                            "~/org/2ndquadrant.org"))
+   ;; Code blocks to play nicelly on org-babel
+   org-edit-src-content-indentation 0      ; number of whitespaces added to the code block indentation (after #begin)
+   org-src-tab-acts-natively t             ; TAB acts natively as it was in the language major mode
+   org-src-preserve-indentation t          ; preserve indentation when exporting blocks
+   org-src-fontify-natively t              ; highlights code-blocks natively
+   org-src-window-setup 'current-window    ; open code-blocks in the current window
+   org-confirm-babel-evaluate nil          ; don't ask for confirmation when compiling code-blocks
 
-    ;; TODO workflow states
-    org-todo-keywords
-    '("☛ TODO(t)" "⚑ WAIT(w@)" "|" "✔ DONE(d)" "✘ CANCEL(c@)")
+   ;; Files location
+   org-directory "~/org"
+   org-default-notes-file (concat org-directory "/notes.org")
+   org-agenda-files (list "~/org/todo.org"
+                          "~/org/2ndquadrant.org"))
 
-    ;; TODO fontification
-    org-todo-keyword-faces
-    '(("☛ TODO"   . (:foreground "#ff4500" :weight bold))
-      ("✔ DONE"   . (:foreground "#00ff7f" :weight bold))
-      ("⚑ WAIT"   . (:foreground "#ffff00" :weight bold))
-      ("✘ CANCEL" . (:foreground "#00bfff" :weight bold)))
-    )
+  ;; TODO workflow states
+  org-todo-keywords
+  '("☛ TODO(t)" "⚑ WAIT(w@)" "|" "✔ DONE(d)" "✘ CANCEL(c@)")
+
+  ;; TODO fontification
+  org-todo-keyword-faces
+  '(("☛ TODO"   . (:foreground "#ff4500" :weight bold))
+    ("✔ DONE"   . (:foreground "#00ff7f" :weight bold))
+    ("⚑ WAIT"   . (:foreground "#ffff00" :weight bold))
+    ("✘ CANCEL" . (:foreground "#00bfff" :weight bold)))
+  )
 #+END_SRC
 
 *** org-clock
@@ -1947,6 +1950,13 @@ can filter by file type, edit results inline, or find files.
     (validate-setq ag-highlight-search t))
 #+END_SRC
 
+** alert
+
+#+BEGIN_SRC emacs-lisp
+(use-package alert
+  :demand t)
+#+END_SRC
+
 ** anzu
 anzu provides a minor mode which displays current match and total matches
 information in the mode-line in various search modes.
@@ -2393,6 +2403,89 @@ which never throw an error, but instead return nil on failure.
     :after pcache)
 #+END_SRC
 
+** pdf-tools
+
+#+BEGIN_SRC emacs-lisp
+(use-package pdf-tools
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-page)
+  (bind-keys :map pdf-view-mode-map
+             ("\\" . hydra-pdftools/body)
+             ("<s-spc>" .  pdf-view-scroll-down-or-next-page)
+             ("g"  . pdf-view-first-page)
+             ("G"  . pdf-view-last-page)
+             ("l"  . image-forward-hscroll)
+             ("h"  . image-backward-hscroll)
+             ("j"  . pdf-view-next-page)
+             ("k"  . pdf-view-previous-page)
+             ("e"  . pdf-view-goto-page)
+             ("u"  . pdf-view-revert-buffer)
+             ("al" . pdf-annot-list-annotations)
+             ("ad" . pdf-annot-delete)
+             ("aa" . pdf-annot-attachment-dired)
+             ("am" . pdf-annot-add-markup-annotation)
+             ("at" . pdf-annot-add-text-annotation)
+             ("y"  . pdf-view-kill-ring-save)
+             ("i"  . pdf-misc-display-metadata)
+             ("s"  . pdf-occur)
+             ("b"  . pdf-view-set-slice-from-bounding-box)
+             ("r"  . pdf-view-reset-slice)))
+
+(use-package org-pdfview
+  :after pdf-tools)
+
+;; Hydra
+(defhydra hydra-pdftools (:color blue :hint nil)
+  "
+                                                                      ╭───────────┐
+       Move  History   Scale/Fit     Annotations  Search/Link    Do   │ PDF Tools │
+   ╭──────────────────────────────────────────────────────────────────┴───────────╯
+         ^^_g_^^      _B_    ^↧^    _+_    ^ ^     [_al_] list    [_s_] search    [_u_] revert buffer
+         ^^^↑^^^      ^↑^    _H_    ^↑^  ↦ _W_ ↤   [_am_] markup  [_o_] outline   [_i_] info
+         ^^_p_^^      ^ ^    ^↥^    _0_    ^ ^     [_at_] text    [_F_] link      [_d_] dark mode
+         ^^^↑^^^      ^↓^  ╭─^─^─┐  ^↓^  ╭─^ ^─┐   [_ad_] delete  [_f_] search link
+    _h_ ←pag_e_→ _l_  _N_  │ _P_ │  _-_    _b_     [_aa_] dired
+         ^^^↓^^^      ^ ^  ╰─^─^─╯  ^ ^  ╰─^ ^─╯   [_y_]  yank
+         ^^_n_^^      ^ ^  _r_eset slice box
+         ^^^↓^^^
+         ^^_G_^^
+   --------------------------------------------------------------------------------
+        "
+  ("\\" hydra-master/body "back")
+  ("<ESC>" nil "quit")
+  ("al" pdf-annot-list-annotations)
+  ("ad" pdf-annot-delete)
+  ("aa" pdf-annot-attachment-dired)
+  ("am" pdf-annot-add-markup-annotation)
+  ("at" pdf-annot-add-text-annotation)
+  ("y"  pdf-view-kill-ring-save)
+  ("+" pdf-view-enlarge :color red)
+  ("-" pdf-view-shrink :color red)
+  ("0" pdf-view-scale-reset)
+  ("H" pdf-view-fit-height-to-window)
+  ("W" pdf-view-fit-width-to-window)
+  ("P" pdf-view-fit-page-to-window)
+  ("n" pdf-view-next-page-command :color red)
+  ("p" pdf-view-previous-page-command :color red)
+  ("d" pdf-view-dark-minor-mode)
+  ("b" pdf-view-set-slice-from-bounding-box)
+  ("r" pdf-view-reset-slice)
+  ("g" pdf-view-first-page)
+  ("G" pdf-view-last-page)
+  ("e" pdf-view-goto-page)
+  ("o" pdf-outline)
+  ("s" pdf-occur)
+  ("i" pdf-misc-display-metadata)
+  ("u" pdf-view-revert-buffer)
+  ("F" pdf-links-action-perfom)
+  ("f" pdf-links-isearch-link)
+  ("B" pdf-history-backward :color red)
+  ("N" pdf-history-forward :color red)
+  ("l" image-forward-hscroll :color red)
+  ("h" image-backward-hscroll :color red))
+#+END_SRC
+
 ** persistent-scratch
 
 [[https://github.com/Fanael/persistent-scratch][persistent-scratch]] preserves the state of scratch buffers accross Emacs sessions
@@ -2528,530 +2621,6 @@ prefix) in a popup.
 #+END_SRC
 
 * Tools
-** COMMENT email - mu
-
-*ATTENTION* This block is disabled for now. I'm testing notmuch as the email solution.
-
-E-mail is set using the following applications:
-
-- to retrieve: [[http://isync.sourceforge.net/][isync(mbsync)]]
-- to send: [[http://msmtp.sourceforge.net/][msmtp]]
-- to index and search: [[http://www.djcbsoftware.nl/code/mu/][mu]]
-- to read (frontend): [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]
-
-*** How it works
-
-I've seen this amazing scheme on [[https://github.com/joedicastro/dotfiles/blob/03d747a22aeb61945bd56dd129ebe7079bfee99a/emacs/.emacs.d/readme.org#mu4e][joedicastro's Emacs.d]]. He is the guy to thanks for this! :)
-It is rendered by =graphviz=.
-
-#+BEGIN_SRC dot :file ./img/mu4e_scheme.png :cmdline -Kdot -Tpng :tangle no
-  digraph G {
-      // General properties
-      size="6,5"
-      dpi=300
-      ratio=auto
-      rankdir="LR"
-      compound=true
-      labelloc=t
-      fontname="Ubuntu Bold"
-      fontsize=48
-      label="Emacs & mu4e email config"
-
-      // NODES
-      node [fontname="Ubuntu Bold"]
-
-      subgraph cluster_mailservers {
-          label="Mail Servers"
-          color=goldenrod4
-          style=dashed
-          penwidth=3
-          margin=30
-          fontsize=20
-          node [penwidth=2, margin=0.2]
-          imap [shape=house, color=blue, label="IMAP\naccount"]
-          pop3 [shape=egg, color=chartreus, label="POP3\naccounts"]
-      }
-
-      {
-          rank=same
-          node [penwidth=2, style=filled, margin=0.2]
-          notifications [
-              color=gold4
-              fillcolor=yellow
-              shape=note
-              margin=0.3
-              label="notifications"
-          ]
-          subgraph {
-              label=""
-              node [penwidth=2, style=filled, margin=0.2]
-              getmail [fillcolor=beige]
-              procmail [fillcolor=beige]
-              postfix [fillcolor=beige]
-              cleanup_maildir [label="cleanup-maildir", fillcolor=moccasin]
-          }
-      }
-
-      subgraph cluster_maildirs {
-          label=""
-          color=invis
-          fontsize=18
-          margin=20
-          subgraph cluster_maili {
-              label=" Maildir IMAP "
-              color=blue
-              fixedsize=true
-              rank=same
-              style=rounded
-              penwidth=2
-              node [shape=folder, color=blue, width=1.4, fontcolor=dimgrey]
-              inbox [label="Inbox"]
-              outbox [label="Outbox"]
-          }
-
-          subgraph cluster_mailp {
-              label=" Maildir Pop3 "
-              color=darkgreen
-              penwidth=2
-              style=rounded
-              node [
-                  shape=folder
-                  color=darkgreen
-                  width=1.4
-                  height=0.4
-                  fontcolor=dimgrey
-              ]
-              Archive [label="Archive"]
-              business [label="business"]
-              code [label="code"]
-              Drafts [label="Drafts"]
-              education [label="education"]
-              Inbox [label="Inbox"]
-              joedicastro [label="joedicastro"]
-              lists [label="lists"]
-              Local [label="Local"]
-              motley [label="motley"]
-              publicity [label="publicity"]
-              Sent [label="Sent"]
-              Spam [label="Spam"]
-              Trash [label="Trash"]
-            work [label="work"]
-          }
-      }
-
-     subgraph cluster_emacsauth {
-          color=invis
-          label=""
-          subgraph cluster_emacs {
-              label="Emacs"
-              color=darkgreen
-              fontsize=28
-              fontcolor=darkgreen
-              fillcolor=darkseagreen1
-              style="filled, rounded"
-              penwidth=3
-              margin=60
-              rank=same
-              node [style=filled, shape=square, fontcolor=white]
-              mu4e [fillcolor=purple, fontsize=30, margin=0.6, peripheries=2]
-              maildirs [fillcolor=maroon, margin=0.2, peripheries=2]
-              epa [fillcolor=green2, margin=0.5, fontcolor=black, label="EasyPG"]
-              dired [fillcolor=aquamarine, margin=0.5, fontcolor=black]
-              flyspell [fillcolor=green2, margin=0.3, fontcolor=black]
-              org [fillcolor=seagreen, margin=0.7, label="org"]
-              contacts [fillcolor=olivedrab, label="org-contacts"]
-              smtp [
-                  label="SmtpMail"
-                  fillcolor=olivedrab1
-                  fontcolor=black
-                  margin=0.3
-              ]
-              gnus [
-                  color=darkblue
-                  fillcolor=palegreen1
-                  label="Gnus\n message-mode"
-                  margin=0.3
-                  fontcolor=black
-              ]
-          }
-          {
-              rank=sink
-              node [penwidth=2, margin=0.2]
-              authinfo [
-                  shape=signature
-                  label="authinfo.gpg"
-                  fontcolor=gold4
-              ]
-              mail_gpg [
-                  shape=signature
-                  label="mail.el.gpg"
-                  fontcolor=gold4
-             ]
-             gpg_agent [
-                  fillcolor=lightskyblue
-                  style=filled
-                  label="gpg-agent"
-             ]
-          }
-      }
-
-      node [fillcolor=beige, style=filled, penwidth=2]
-
-      localhost [shape=plaintext, fillcolor=grey, margin=0.2]
-      mu [margin=0.15, shape=doublecircle, fontsize=18]
-
-      // EDGES
-      edge [fontname="Ubuntu", fontsize=18, penwidth=2]
-
-      imap -> getmail [color=blue, label="retrieve email regularly", dir=both]
-      pop3 -> getmail [color=darkgreen]
-
-      getmail -> procmail [color=darkgreen, label="process mail"]
-      procmail -> notifications [
-          color=gold4
-          label="via notify-send"
-          style=dashed
-          constraint=none
-          minlen=3
-      ]
-
-      inbox -> mu [
-          ltail=cluster_maili
-          penwidth=3
-          color=blue
-          style=dashed
-          dir=back
-          label="index"
-      ]
-      Inbox -> mu [
-          ltail=cluster_mailp
-          penwidth=3
-          color=darkgreen
-          style=dashed
-          dir=back
-          label="index"
-      ]
-
-      getmail -> inbox  [
-          color=blue
-          dir=both
-          lhead=cluster_maili
-          label="update"
-      ]
-
-      localhost -> postfix [color=gold4]
-      postfix -> Local [color=gold4, taillabel="store"]
-      procmail -> code [color=darkgreen]
-      procmail -> education [color=darkgreen]
-      procmail -> Inbox [color=darkgreen, penwidth=3, label="store"]
-      procmail -> lists [color=darkgreen]
-      procmail -> publicity [color=darkgreen]
-      procmail -> Spam [color=darkgreen]
-
-      edge [fontname="Ubuntu", fontsize=18, penwidth=2]
-      lists    -> cleanup_maildir [color=crimson]
-      Trash    -> cleanup_maildir [color=crimson]
-      publicity-> cleanup_maildir [color=crimson, label="delete"]
-      Local    -> cleanup_maildir [color=crimson]
-      Spam     -> cleanup_maildir [color=crimson]
-
-      edge [fontname="Ubuntu", fontsize=18, penwidth=2]
-      mu4e -> gnus [label="compose, reply & forward", color=darkgreen]
-      contacts -> gnus [label="auto-complete\n contacts", style=dotted]
-      flyspell -> gnus [style=dotted, label="spell check"]
-      gnus -> smtp [label="send", color=darkgreen]
-      gnus -> epa [style=dashed, label="sign & encrypt", dir=both]
-      epa -> gpg_agent [
-          label="sign & encrypt"
-          color=darkgreen
-          style=dashed
-          dir=both
-      ]
-
-      gpg_agent -> epa [
-          label="decrypt & verify"
-          color=darkgreen
-          style=dashed
-      ]
-      epa -> mu4e [style=dashed, label="decrypt & verify"]
-      org -> gnus [
-          label="compose\n rich-text messages"
-          dir=both
-          style=dotted
-      ]
-
-      dired -> gnus [label="attach & compose", style=dotted]
-      smtp -> pop3 [label="send", color=darkgreen]
-      smtp -> Sent [label="store", color=darkgreen]
-      smtp -> imap [label="send", color=blue]
-
-      mu -> mu4e [
-          color=purple
-          penwidth=3
-          style=dashed
-          label="search & view"
-          fontcolor=purple
-          fontsize=18
-          fontname="Ubuntu Bold"
-      ]
-      maildirs -> mu4e [style=dotted, label="summarize"]
-
-      edge [style=dashed]
-      authinfo -> epa [label="server config"]
-      epa -> smtp [label="read server config"]
-      authinfo -> gpg_agent [dir=back, label="decrypt", minlen=2.0]
-      mail_gpg -> gpg_agent [dir=back, label="decrypt", minlen=3.0]
-      mail_gpg -> mu4e [label="read user's info"]
-  }
-#+END_SRC
-
-#+RESULTS:
-[[file:./img/mu4e_scheme.png]]
-
-*** mu4e
-
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")
-
-  (use-package mu4e
-    :ensure nil
-    :bind (("C-c m" . mu4e))
-    :config
-    (validate-setq mu4e-maildir "~/Maildir"                ; where it is the mail folder
-                   mail-user-agent 'mu4e-user-agent        ; set mu4e as the default mail agent
-                   mu4e-mu-binary "/usr/local/bin/mu"      ; point to the full binary of the mu
-                   mu4e-get-mail-command "mbsync -a"       ; fetch email using mbsync
-                   mu4e-update-interval 300                ; fetch email in a 5 min interval
-                   mu4e-view-show-images t                 ; show images on email buffer
-                   mu4e-view-show-addresses t              ; show full email address from sender
-                   mu4e-use-fancy-chars t                  ; use 'fancy' non-ascii characters in various places in mu4e
-                   mu4e-attachment-dir  "~/Downloads"      ; save attachments into ~/Downloads
-                   mu4e-sent-messages-behavior 'delete     ; don't save message to Sent Messages, GMail/IMAP will take care of this
-                   mu4e-hide-index-messages t              ; stop showing the "indexing..." message in the minibuffer
-                   mu4e-confirm-quit nil                   ; quit without asking for confirmation
-                   mu4e-change-filenames-when-moving t     ; avoid mbsync breaking with UIDs maildir error
-                   mu4e-compose-signature-auto-include nil
-
-                   mu4e-headers-date-format "%Y-%m-%d %H:%M"       ; date format of the header list
-                   mu4e-headers-time-format "%H:%M"                ; time format of the header list
-                   mu4e-date-format-long "%A %Y-%m-%d %T %z (%Z)"  ; date format in the message view
-
-                   ;; List of headers
-                   mu4e-headers-fields '((:human-date     . 20)
-                                         ;;(:date           . 20)
-                                         (:flags          . 7)
-                                         (:mailing-list   . 15)
-                                         (:from-or-to     . 40)
-                                         (:thread-subject . nil))
-                   )
-
-    ;; use imagemagick, if available
-    (when (fboundp 'imagemagick-register-types)
-      (imagemagick-register-types))
-
-    ;; add to view-actions the option to open html messages with xwidget
-    (add-to-list 'mu4e-view-actions
-                 '("xwidget view" . mu4e-action-view-with-xwidget) t)
-
-    ;; Load email accounts using mu4e-contexts
-    ;; https://www.djcbsoftware.nl/code/mu/mu4e/Contexts-example.html
-    (load "~/my-prj/dotfiles/init-mu4e.el" t)
-    )
-#+END_SRC
-
-*** mu4e-contrib
-
-#+BEGIN_SRC emacs-lisp
-  (use-package mu4e-contrib
-    :after mu4e
-    :ensure nil
-    :config
-    ;; Changes default headers marks for more cool ones
-    ;; https://github.com/cpitclaudel/.emacs.d/blob/master/init/mode-specific/mu4e.el
-    (validate-setq mu4e-headers-draft-mark     '("D" . "📝 ") ;; ✒ ✏
-                   mu4e-headers-flagged-mark   '("F" . "🏴 ")
-                   mu4e-headers-new-mark       '("N" . "✉ ")
-                   mu4e-headers-passed-mark    '("P" . "→ ") ;; ↪
-                   mu4e-headers-replied-mark   '("R" . "← ")
-                   mu4e-headers-seen-mark      '("S" . "🗸")  ;; ✓ 🗸 ✔
-                   mu4e-headers-trashed-mark   '("T" . "✗ ") ;; 🗑
-                   mu4e-headers-attach-mark    '("a" . "📎 ")
-                   mu4e-headers-encrypted-mark '("x" . "🔐 ")
-                   mu4e-headers-signed-mark    '("s" . "🔏 ")
-                   mu4e-headers-unread-mark    '("u" . "● ") ;; ★
-                   mu4e-headers-from-or-to-prefix   '("" . "➜ ")
-                   mu4e-headers-empty-parent-prefix '("-" . "○")
-                   mu4e-headers-first-child-prefix  '("\\" . "┗━❯")
-                   mu4e-headers-has-child-prefix    '("+" . "┗◉")
-                   mu4e-headers-duplicate-prefix    '("=" . "⚌")
-                   mu4e-headers-default-prefix      '("|" . "┃")
-                   )
-
-    (set-face-attribute 'mu4e-unread-face nil :inherit 'default :foreground "DarkOrange" :weight 'bold :underline nil)
-
-    ;; try to emulate some of the eww key-bindings
-    (add-hook 'mu4e-view-mode-hook
-              (lambda ()
-                (local-set-key (kbd "<tab>") 'shr-next-link)
-                (local-set-key (kbd "<backtab>") 'shr-previous-link))))
-#+END_SRC
-
-*** org-mu4e
-
-#+BEGIN_SRC emacs-lisp
-  (use-package org-mu4e
-    :after mu4e
-    :ensure nil)
-#+END_SRC
-
-*** mu4e-alert
-
-#+BEGIN_SRC emacs-lisp
-  (use-package mu4e-alert
-    :after mu4e
-    :init
-    (add-hook 'after-init-hook
-              #'mu4e-alert-enable-notifications)       ; enable notifications
-    (add-hook 'after-init-hook
-              #'mu4e-alert-enable-mode-line-display)   ; display unread email count in the mode-line
-    :config
-    (validate-setq
-     mu4e-alert-email-notification-types '(count))     ; display only total number of unread emails
-
-    ;; Set notification style accordingly to the OS
-    (cond ((eq system-type 'gnu/linux)
-           (mu4e-alert-set-default-style 'libnotify)
-           ;;(mu4e-alert-set-default-style 'notifications) ; alternative
-           )
-          ((eq system-type 'darwin)
-           (mu4e-alert-set-default-style 'notifier)
-           ;; (mu4e-alert-set-default-style 'growl)        ; alternative
-           ))
-
-    (alert-add-rule
-     :category "mu4e-alert"
-     :predicate (lambda (_) (string-match-p "^mu4e-" (symbol-name major-mode)))
-     :continue t))
-#+END_SRC
-
-*** mu4e-maildirs-extension
-
-It adds a maildir summary in mu4e-main-view.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package mu4e-maildirs-extension
-    :after mu4e
-    :config
-    (mu4e-maildirs-extension)
-    (validate-setq mu4e-maildirs-extension-maildir-separator    "*"
-                   mu4e-maildirs-extension-submaildir-separator "✉"
-                   mu4e-maildirs-extension-action-text          nil))
-#+END_SRC
-
-*** Sending emails asynchronous
-
-This is useful to send emails with attachments and do not block emacs until end
-the transmission. It requires [[https://github.com/jwiegley/emacs-async][emacs-async]].
-
-#+BEGIN_SRC emacs-lisp
-  (use-package smtpmail-async
-    :ensure async
-    :config
-    (validate-setq
-     send-mail-function 'async-smtpmail-send-it
-     message-send-mail-function 'async-smtpmail-send-it))
-#+END_SRC
-
-*** Decorate mu main view
-
-It will highlight and change colors of some caracters on the mu main view. Just
-no to leave things too plain ;)
-
-#+BEGIN_SRC emacs-lisp
-  (defun my-mu4e-main-mode-font-lock-rules ()
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "\\[\\([a-zA-Z]\\{1,2\\}\\)\\]" nil t)
-        (add-text-properties (match-beginning 1) (match-end 1)
-                             '(face font-lock-variable-name-face)))))
-  (add-hook 'mu4e-main-mode-hook 'my-mu4e-main-mode-font-lock-rules)
-#+END_SRC
-
-*** Fontify mu faces
-
-I've found the mu4e faces listed below [[https://groups.google.com/forum/#!topic/mu-discuss/AJ1A-Z8RMv4][here]]. To follow the inheritance use
-~counsel-describe-face~ or help ~describe-symbol~.
-
-#+BEGIN_SRC emacs-lisp
-     ;; (defgroup mu4e-faces nil
-     ;;   "Type faces (fonts) used in mu4e."
-     ;;   :group 'mu4e
-     ;;   :group 'faces)
-
-     ;; (defface mu4e-basic-face
-     ;;   '((t :inherit font-lock-keyword-face))
-     ;;   "Basic Face."
-     ;;   :group 'mu4e-faces)
-
-     ;; (defface mu4e-list-default
-     ;;   '((t :inherit mu4e-basic-face))
-     ;;   "Basic list Face."
-     ;;   :group 'mu4e-faces)
-
-     ;; (defface mu4e-rw-default
-     ;;   '((t :inherit mu4e-basic-face))
-     ;;   "Basic rw Face."
-     ;;   :group 'mu4e-faces)
-
-     ;; ;; basic face from where the rest inherits
-     ;; '(mu4e-basic-face ((t :inherit font-lock-keyword-face :weight normal :foreground "Gray10")))
-
-     ;; ;; read-write group
-     ;; '(mu4e-rw-default ((t :inherit mu4e-basic-face))) ;; face from where all the read/write faces inherits
-     ;; '(mu4e-header-face ((t :inherit mu4e-rw-default)))
-     ;; '(mu4e-header-marks-face ((t :inherit mu4e-rw-default)))
-     ;; '(mu4e-header-title-face ((t :inherit mu4e-rw-default)))
-     ;; '(mu4e-header-highlight-face ((t :inherit mu4e-rw-default :foreground "Black" :background "LightGray")))
-     ;; '(mu4e-compose-header-face ((t :inherit mu4e-rw-default)))
-     ;; '(mu4e-compose-separator-face ((t :inherit mu4e-rw-default :foreground "Gray30" :weight bold)))
-     ;; '(mu4e-footer-face  ((t :inherit mu4e-rw-default)))
-     ;; '(mu4e-contact-face ((t :inherit mu4e-rw-default   :foreground "Black")))
-     ;; '(mu4e-cited-1-face ((t :inherit mu4e-rw-default   :foreground "Gray10")))
-     ;; '(mu4e-cited-2-face ((t :inherit mu4e-cited-1-face :foreground "Gray20")))
-     ;; '(mu4e-cited-3-face ((t :inherit mu4e-cited-2-face :foreground "Gray30")))
-     ;; '(mu4e-cited-4-face ((t :inherit mu4e-cited-3-face :foreground "Gray40")))
-     ;; '(mu4e-cited-5-face ((t :inherit mu4e-cited-4-face :foreground "Gray50")))
-     ;; '(mu4e-cited-6-face ((t :inherit mu4e-cited-5-face :foreground "Gray60")))
-     ;; '(mu4e-cited-7-face ((t :inherit mu4e-cited-6-face :foreground "Gray70")))
-     ;; '(mu4e-link-face    ((t :inherit mu4e-rw-default   :foreground "Blue" :weight bold)))
-     ;; '(mu4e-system-face  ((t :inherit mu4e-rw-defaul    :foreground "DarkOrchid")))
-     ;; '(mu4e-url-number-face ((t :inherit mu4e-rw-default :weight bold)))
-     ;; '(mu4e-attach-number-face ((t :inherit mu4e-rw-default :weight bold :foreground "Blue")))
-
-     ;; ;; lists (headers) group
-     ;; '(mu4e-list-default ((t :inherit mu4e-basic-face))) ;; basic list face from where lists inherits
-     ;; '(mu4e-draft-face   ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-flagged-face ((t :inherit mu4e-list-default :weight bold :foreground "Black")))
-     ;; '(mu4e-forwarded-face ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-list-default-face ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-title-face    ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-trashed-face  ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-warning-face  ((t :inherit mu4e-list-default :foreground "OrangeRed1")))
-     ;; '(mu4e-modeline-face ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-moved-face    ((t :inherit mu4e-list-default)))
-     ;; '(mu4e-ok-face       ((t :inherit mu4e-list-default :foreground "ForestGreen")))
-     ;; '(mu4e-read-face     ((t :inherit mu4e-list-default :foreground "Gray80")))
-     ;; '(mu4e-region-code-face ((t :inherit mu4e-list-default :background "Gray25")))
-     ;; '(mu4e-replied-face   ((t :inherit mu4e-list-default :foreground "Black")))
-     ;; '(mu4e-unread-face    ((t :inherit mu4e-list-default :foreground "Blue")))
-     ;; '(mu4e-highlight-face ((t :inherit mu4e-unread-face)))
-
-     ;; '(mu4e-special-header-value-face ((t :inherit mu4e-contact-face)))
-     ;; '(mu4e-header-key-face   ((t :inherit mu4e-contact-face :foreground "Gray50")))
-     ;; '(mu4e-header-value-face ((t :inherit mu4e-contact-face)))
-     ;; '(message-cited-text     ((t :inherit mu4e-rw-default :foreground "Gray10")))
-#+END_SRC
-
 ** email - notmuch
 
 E-mail is set using the following applications:
@@ -3060,6 +2629,105 @@ E-mail is set using the following applications:
 - to send: [[http://msmtp.sourceforge.net/][msmtp]]
 - to index and search: notmuch
 - to read (frontend): notmuch
+
+#+BEGIN_SRC emacs-lisp
+(use-package notmuch
+  :bind (("C-c m" . notmuch))
+  :config
+  (validate-setq
+   notmuch-command "~/my-prj/dotfiles/remote-notmuch.sh"
+   notmuch-search-oldest-first nil          ; set default order newest -> oldest
+   mail-specify-envelope-from t             ; settings to work with msmtp
+   message-sendmail-envelope-from 'header
+   mail-specify-envelope-from 'header
+   message-kill-buffer-on-exit t            ; kill buffer after sending mail
+   notmuch-hello-thousands-separator "."    ; add a thousand separator
+   notmuch-show-all-multipart/alternative-parts nil
+   notmuch-search-line-faces '(("unread" :weight bold)
+                               ("flagged" :inherit 'font-lock-string-face))
+
+   ;; Format how search results are shown
+   notmuch-search-result-format '(("date"    . "%12s  ")
+                                  ("count"   . "%-7s  ")
+                                  ("authors" . "%-30s ")
+                                  ("subject" . "%s ")
+                                  ("tags"    . "(%s)"))
+   )
+
+  ;; Completion selection with helm
+  (setq notmuch-address-selection-function
+        (lambda (prompt collection initial-input)
+          (completing-read prompt
+                           (cons initial-input collection)
+                           nil t nil 'notmuch-address-history)))
+
+  ;; Mark/unmark as deleted on notmuch-search-mode
+  (define-key notmuch-search-mode-map "d"
+    (lambda ()
+      "toggle deleted tag for thread"
+      (interactive)
+      (if (member "deleted" (notmuch-search-get-tags))
+          (notmuch-search-tag '("-deleted"))
+        (notmuch-search-tag '("+deleted" "-inbox" "-unread")))))
+
+  ;; Mark/unmark as deleted on notmuch-show-mode
+  (define-key notmuch-show-mode-map "d"
+    (lambda ()
+      "toggle deleted tag for message"
+      (interactive)
+      (if (member "deleted" (notmuch-show-get-tags))
+          (notmuch-show-tag '("-deleted"))
+        (notmuch-show-tag '("+deleted" "-inbox" "-unread")))))
+
+  ;; Mark/unmark as unread on notmuch-search-mode
+  (define-key notmuch-search-mode-map "!"
+    (lambda ()
+      "toggle unread tag for thread"
+      (interactive)
+      (if (member "unread" (notmuch-search-get-tags))
+          (notmuch-search-tag '("-unread"))
+        (notmuch-search-tag '("+unread")))))
+
+  ;; Mark/unmark as archived on notmuch-search-mode
+  (define-key notmuch-search-mode-map "a"
+    (lambda ()
+      "toggle archive"
+      (interactive)
+      (if (member "archive" (notmuch-search-get-tags))
+          (notmuch-search-tag '("-archive"))
+        (notmuch-search-tag '("+archive" "-inbox" "-unread")))))
+
+  ;; Mark/unmark as archived on notmuch-show-mode
+  (define-key notmuch-show-mode-map "a"
+    (lambda ()
+      "toggle archive"
+      (interactive)
+      (if (member "archive" (notmuch-show-get-tags))
+          (notmuch-show-tag '("-archive"))
+        (notmuch-show-tag '("+archive" "-inbox" "-unread")))))
+
+  ;; Show only unread messages on notmuch-search-mode
+  (define-key notmuch-search-mode-map "u"
+    (lambda ()
+      "show only unread messages"
+      (interactive)
+      (notmuch-search-filter-by-tag "unread")))
+
+  ;; change "unread" into an icon
+  (add-to-list 'notmuch-tag-formats
+			   '("unread"
+				 (notmuch-tag-format-image-data tag (notmuch-tag-tag-icon))))
+  )
+
+(use-package gnus-art
+  :ensure nil)
+
+(use-package org-notmuch
+  :ensure org-plus-contrib
+  :after notmuch)
+#+END_SRC
+
+*** My personal configuration
 
 #+BEGIN_SRC emacs-lisp
   (load "~/my-prj/dotfiles/init-notmuch.el" t)
@@ -3645,9 +3313,8 @@ key-binding using `bind` from use-package:
 * Appearance
 ** Themes
 
-Some interesting themes are listed (just change it below to load and check how
-it looks). At first I was loading all of them with ~use-package~, but they were
-interfering with each other. I think it's safer loading just the chosen one.
+Here is a list of some themes I like. Just enable it on the configuration below;
+don't forget the disable the one that is active.
 
 - [[https://github.com/jordonbiondo/ample-theme][ample-themes]]
 - [[https://github.com/waymondo/apropospriate-theme][apropospriate-theme]]
@@ -3659,59 +3326,40 @@ interfering with each other. I think it's safer loading just the chosen one.
 - [[https://github.com/bbatsov/zenburn-emacs][zenburn-theme]]
 - [[https://github.com/nashamri/spacemacs-theme][spacemacs-theme]]
 
-#+BEGIN_SRC emacs-lisp
-  (use-package leuven-theme
-    :disabled t
-    :init
-    (load-theme 'leuven t)
-    (setq leuven-scale-outline-headlines nil))
-
-  (use-package doom-themes
-    :disabled t
-    :init
-    (load-theme 'doom-one t)
-    (setq doom-enable-brighter-comments t)      ; comments are easy to see
-    (add-hook 'find-file-hook
-              'doom-buffer-mode)                ; brighter source buffers
-    (add-hook 'minibuffer-setup-hook
-              'doom-brighten-minibuffer)        ; brighter minibuffer when active
-    (require 'doom-neotree))                    ; custom neotree theme
-
-  (use-package apropospriate-theme
-    :disabled t
-    :init
-    (load-theme 'apropospriate-dark t))
-
-  (use-package dracula-theme
-    :disabled t
-    :init
-    (load-theme 'dracula t))
-
-  (use-package spacemacs-theme
-    :disabled t
-    :init
-    (load-theme 'spacemacs-dark t))
-
-  (use-package zerodark-theme
-    :disabled t
-    :init
-    (load-theme 'zerodark t)
-    (zerodark-setup-modeline-format-alt))
-
-  (use-package material-theme
-    :demand t
-    :init
-    (load-theme 'material t))
- #+END_SRC
-
-*** Fine tuning of the theme
-
-Some themes, as solarized and material, change the pitch size of org-headers. I
-think it's a little to big, so I adjust them here. In this case I'm adjusting
-the ~material-theme~, which is the one I'm using. If you want to change the
-~solarized-theme~ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
+Some themes, as solarized and material, change the pitch size of org-headers,
+leaving them a little too big for my taste, so I adjust them. I'm adjusting the
+~material-theme~ below. If you want to change the ~solarized-theme~ instead, check
+[[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
 
 #+BEGIN_SRC emacs-lisp
+(use-package leuven-theme
+  :disabled t
+  :init
+  (load-theme 'leuven t)
+  (setq leuven-scale-outline-headlines nil))
+
+(use-package doom-themes
+  :disabled t
+  :init
+  (load-theme 'doom-one t)
+  (setq doom-enable-brighter-comments t)      ; comments are easy to see
+  (add-hook 'find-file-hook
+            'doom-buffer-mode)                ; brighter source buffers
+  (add-hook 'minibuffer-setup-hook
+            'doom-brighten-minibuffer)        ; brighter minibuffer when active
+  (require 'doom-neotree))                    ; custom neotree theme
+
+(use-package zerodark-theme
+  :disabled t
+  :init
+  (load-theme 'zerodark t)
+  (zerodark-setup-modeline-format))
+
+(use-package material-theme
+  :demand t
+  :init
+  (load-theme 'material t)
+  :config
   (custom-theme-set-faces
    'material
    `(org-level-1 ((t (:inherit outline-1
@@ -3730,8 +3378,8 @@ the ~material-theme~, which is the one I'm using. If you want to change the
    `(org-level-7 ((t (:inherit outline-7 ))))
    `(org-level-8 ((t (:inherit outline-8 ))))
    `(org-level-9 ((t (:inherit outline-9 ))))
-   )
-#+END_SRC
+   ))
+ #+END_SRC
 
 ** Fonts
 
@@ -3797,12 +3445,6 @@ the ~material-theme~, which is the one I'm using. If you want to change the
   (when-let (frame (selected-frame))
     (my-configure-fonts frame))
   (add-hook 'after-make-frame-functions #'my-configure-fonts)
-
-
-    (use-package unicode-fonts
-      :demand t
-      :config
-      (unicode-fonts-setup))
 #+END_SRC
 
 ** Modeline
@@ -3812,8 +3454,8 @@ the ~material-theme~, which is the one I'm using. If you want to change the
 them within Emacs.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package all-the-icons
-    :demand t)
+(use-package all-the-icons
+  :demand t)
 #+END_SRC
 
 *** delight
@@ -3826,55 +3468,55 @@ well as minor modes, and also incorporates the necessary ‘eval-after-load’ c
 for minor modes, which makes the configuration simpler.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package delight
-    :demand t
-    :config
-    (delight '((company-mode " Ⓐ" company)
-               (hs-minor-mode " ⓗ" hideshow)
-               (outline-minor-mode " Ⓞ" outline)
-               (outline-mode " Ⓞ" :major)
-               (git-gutter-mode " Ⓖ" git-gutter)
-               (flyspell-mode " Ⓕ" flyspell)
-               (smartparens-mode " Ⓢ" smartparens)
-               (elisp-slime-nav-mode nil elisp-slime-nav)
-               (emacs-lisp-mode "Elisp" :major)
-               (lisp-interaction-mode "LispI" :major)
-               (ess-noweb-font-lock-mode nil ess)
-               (reftex-mode " Ⓡ" reftex)
-               (visual-line-mode " Ⓦ" simple)
-               (ess-noweb-mode " Ⓝ" ess)
-               (anzu-mode " Ⓩ" anzu)
-               (abbrev-mode " ⓐ" abbrev)
-               (helm-mode " Ⓗ" helm)
-               (rainbow-mode)
-               (org-indent-mode nil org-indent)
-               (which-key-mode nil which-key)
-               (counsel-mode nil counsel)
-               (ivy-mode nil ivy)
-               (fixmee-mode nil fixmee)
-               (button-lock-mode nil button-lock)
-               (beacon-mode nil beacon)
-               (page-break-lines-mode nil page-break-lines)
-               (auto-revert-mode nil autorevert)
-               (undo-tree-mode nil undo-tree)
-               ;;(server-buffer-clients . " ⓒ")
-               )))
+(use-package delight
+  :demand t
+  :config
+  (delight '((company-mode " Ⓐ" company)
+             (hs-minor-mode " ⓗ" hideshow)
+             (outline-minor-mode " Ⓞ" outline)
+             (outline-mode " Ⓞ" :major)
+             (git-gutter-mode " Ⓖ" git-gutter)
+             (flyspell-mode " Ⓕ" flyspell)
+             (smartparens-mode " Ⓢ" smartparens)
+             (elisp-slime-nav-mode nil elisp-slime-nav)
+             (emacs-lisp-mode "Elisp" :major)
+             (lisp-interaction-mode "LispI" :major)
+             (ess-noweb-font-lock-mode nil ess)
+             (reftex-mode " Ⓡ" reftex)
+             (visual-line-mode " Ⓦ" simple)
+             (ess-noweb-mode " Ⓝ" ess)
+             (anzu-mode " Ⓩ" anzu)
+             (abbrev-mode " ⓐ" abbrev)
+             (helm-mode " Ⓗ" helm)
+             (rainbow-mode)
+             (org-indent-mode nil org-indent)
+             (which-key-mode nil which-key)
+             (counsel-mode nil counsel)
+             (ivy-mode nil ivy)
+             (fixmee-mode nil fixmee)
+             (button-lock-mode nil button-lock)
+             (beacon-mode nil beacon)
+             (page-break-lines-mode nil page-break-lines)
+             (auto-revert-mode nil autorevert)
+             (undo-tree-mode nil undo-tree)
+             ;;(server-buffer-clients . " ⓒ")
+             )))
 #+END_SRC
 
 *** spaceline
 
 #+BEGIN_SRC emacs-lisp
-  (use-package spaceline
-    :config
-    (setq powerline-default-separator 'wave
-          spaceline-window-numbers-unicode t
-          spaceline-workspace-numbers-unicode t))
+(use-package spaceline
+  :config
+  (setq powerline-default-separator 'wave
+        spaceline-window-numbers-unicode t
+        spaceline-workspace-numbers-unicode t))
 
-  (use-package spaceline-config
-    :demand t
-    :ensure nil
-    :config
-    (spaceline-spacemacs-theme))
+(use-package spaceline-config
+  :demand t
+  :ensure nil
+  :config
+  (spaceline-spacemacs-theme))
 #+END_SRC
 
 ** Other details
