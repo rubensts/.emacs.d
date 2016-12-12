@@ -2223,6 +2223,17 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                                    "github.*txt$"
                                    ".*png$")))
 
+;; sql
+
+;; [[https://github.com/Trevoke/sqlup-mode.el][sqlup-mode]] is a minor mode for emacs. Its sole purpose is to make your life
+;; easier when writing SQL.
+
+(use-package sqlup-mode
+  :bind (("C-c u" . sqlup-capitalize-keywords-in-region))
+  :config
+  (add-hook 'sql-mode-hook 'sqlup-mode)                ; capitalize keywords in SQL mode
+  (add-hook 'sql-interactive-mode-hook 'sqlup-mode))   ; capitalize keywords in an interactive session (e.g. psql)
+
 ;; uniquify
 
 ;; Nicer naming of buffers for files with identical names. [[https://github.com/purcell/emacs.d/blob/master/lisp/init-uniquify.el][source]]
