@@ -489,21 +489,21 @@ text and copying to the killring."
            :immediate-finish)
 
           ("r" "Redmine" entry
-           (file+datetree (concat org-directory "/2ndQ.org"))
+           (file+datetree (concat org-directory "/2ndquadrant.org"))
            "* [[https://redmine.2ndquadrant.it/issues/%^{Ticket}][%^{Description}]] :redmine:%^g\n%?"
            :clock-in t
            :clock-keep t
            :empty-lines 1)
 
           ("s" "RT - Support" entry
-           (file+datetree (concat org-directory "/2ndQ.org"))
+           (file+datetree (concat org-directory "/2ndquadrant.org"))
            "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :support:%^g\n%?"
            :clock-in t
            :clock-keep t
            :empty-lines 1)
 
           ("b" "RT - RDBA" entry
-           (file+datetree (concat org-directory "/2ndQ.org"))
+           (file+datetree (concat org-directory "/2ndquadrant.org"))
            "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :rdba:%^g\n%?"
            :clock-in t
            :clock-keep t
