@@ -401,7 +401,7 @@ text and copying to the killring."
           ("C-c t" . org-todo-list))
   :config
   (validate-setq
-   org-tags-column -100                    ; column to which the tags have to be indented
+   org-tags-column 90                      ; column to which the tags have to be indented
    org-ellipsis "⤵"                        ; ⬎, ⤷, ⤵, ⚡
    org-fontify-whole-heading-line t        ; fontify the whole line for headings
    org-fontify-done-headline t
