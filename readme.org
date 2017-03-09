@@ -610,7 +610,7 @@ try Emacs, then they are hooked ;)
    org-directory "~/org"
    org-default-notes-file (concat org-directory "/notes.org")
    org-agenda-files (list "~/org/todo.org"
-                          "~/org/2ndquadrant.org"))
+                          "~/org/clockin.org"))
 
   ;; TODO workflow states
   org-todo-keywords
@@ -679,21 +679,21 @@ try Emacs, then they are hooked ;)
              :immediate-finish)
 
             ("r" "Redmine" entry
-             (file+datetree (concat org-directory "/2ndquadrant.org"))
+             (file+datetree (concat org-directory "/clockin.org"))
              "* [[https://redmine.2ndquadrant.it/issues/%^{Ticket}][%^{Description}]] :redmine:%^g\n%?"
              :clock-in t
              :clock-keep t
              :empty-lines 1)
 
             ("s" "RT - Support" entry
-             (file+datetree (concat org-directory "/2ndquadrant.org"))
+             (file+datetree (concat org-directory "/clockin.org"))
              "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :support:%^g\n%?"
              :clock-in t
              :clock-keep t
              :empty-lines 1)
 
             ("b" "RT - RDBA" entry
-             (file+datetree (concat org-directory "/2ndquadrant.org"))
+             (file+datetree (concat org-directory "/clockin.org"))
              "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :rdba:%^g\n%?"
              :clock-in t
              :clock-keep t
@@ -2643,12 +2643,14 @@ E-mail is set using the following applications:
 - to index and search: notmuch
 - to read (frontend): notmuch
 
+*** notmuch main configuration
+
 #+BEGIN_SRC emacs-lisp
 (use-package notmuch
   :bind (("C-c m" . notmuch))
   :config
   (validate-setq
-   notmuch-command "~/my-prj/dotfiles/remote-notmuch.sh"
+   ;;notmuch-command "~/my-prj/dotfiles/remote-notmuch.sh"
    notmuch-search-oldest-first nil          ; set default order newest -> oldest
    mail-specify-envelope-from t             ; settings to work with msmtp
    message-sendmail-envelope-from 'header
@@ -2676,8 +2678,7 @@ E-mail is set using the following applications:
 
   ;; Mark/unmark as deleted on notmuch-search-mode
   (define-key notmuch-search-mode-map "d"
-    (lambda ()
-      "toggle deleted tag for thread"
+    (lambda () "toggle deleted tag for thread"
       (interactive)
       (if (member "deleted" (notmuch-search-get-tags))
           (notmuch-search-tag '("-deleted"))
@@ -2685,8 +2686,7 @@ E-mail is set using the following applications:
 
   ;; Mark/unmark as deleted on notmuch-show-mode
   (define-key notmuch-show-mode-map "d"
-    (lambda ()
-      "toggle deleted tag for message"
+    (lambda () "toggle deleted tag for message"
       (interactive)
       (if (member "deleted" (notmuch-show-get-tags))
           (notmuch-show-tag '("-deleted"))
@@ -2694,8 +2694,7 @@ E-mail is set using the following applications:
 
   ;; Mark/unmark as unread on notmuch-search-mode
   (define-key notmuch-search-mode-map "!"
-    (lambda ()
-      "toggle unread tag for thread"
+    (lambda () "toggle unread tag for thread"
       (interactive)
       (if (member "unread" (notmuch-search-get-tags))
           (notmuch-search-tag '("-unread"))
@@ -2703,8 +2702,7 @@ E-mail is set using the following applications:
 
   ;; Mark/unmark as archived on notmuch-search-mode
   (define-key notmuch-search-mode-map "a"
-    (lambda ()
-      "toggle archive"
+    (lambda () "toggle archive"
       (interactive)
       (if (member "archive" (notmuch-search-get-tags))
           (notmuch-search-tag '("-archive"))
@@ -2712,8 +2710,7 @@ E-mail is set using the following applications:
 
   ;; Mark/unmark as archived on notmuch-show-mode
   (define-key notmuch-show-mode-map "a"
-    (lambda ()
-      "toggle archive"
+    (lambda () "toggle archive"
       (interactive)
       (if (member "archive" (notmuch-show-get-tags))
           (notmuch-show-tag '("-archive"))
@@ -2721,8 +2718,7 @@ E-mail is set using the following applications:
 
   ;; Show only unread messages on notmuch-search-mode
   (define-key notmuch-search-mode-map "u"
-    (lambda ()
-      "show only unread messages"
+    (lambda () "show only unread messages"
       (interactive)
       (notmuch-search-filter-by-tag "unread")))
 
@@ -3100,7 +3096,7 @@ words. [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-w
 
 #+BEGIN_SRC emacs-lisp
   (use-package aggressive-indent
-    :demand t
+    ;;:demand t
     :config
     (global-aggressive-indent-mode 1)
     (add-to-list 'aggressive-indent-excluded-modes 'html-mode)

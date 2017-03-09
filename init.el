@@ -424,7 +424,7 @@ text and copying to the killring."
    org-directory "~/org"
    org-default-notes-file (concat org-directory "/notes.org")
    org-agenda-files (list "~/org/todo.org"
-                          "~/org/2ndquadrant.org"))
+                          "~/org/clockin.org"))
 
   ;; TODO workflow states
   org-todo-keywords
@@ -489,21 +489,21 @@ text and copying to the killring."
            :immediate-finish)
 
           ("r" "Redmine" entry
-           (file+datetree (concat org-directory "/2ndquadrant.org"))
+           (file+datetree (concat org-directory "/clockin.org"))
            "* [[https://redmine.2ndquadrant.it/issues/%^{Ticket}][%^{Description}]] :redmine:%^g\n%?"
            :clock-in t
            :clock-keep t
            :empty-lines 1)
 
           ("s" "RT - Support" entry
-           (file+datetree (concat org-directory "/2ndquadrant.org"))
+           (file+datetree (concat org-directory "/clockin.org"))
            "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :support:%^g\n%?"
            :clock-in t
            :clock-keep t
            :empty-lines 1)
 
           ("b" "RT - RDBA" entry
-           (file+datetree (concat org-directory "/2ndquadrant.org"))
+           (file+datetree (concat org-directory "/clockin.org"))
            "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :rdba:%^g\n%?"
            :clock-in t
            :clock-keep t
@@ -2324,20 +2324,13 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
                   ("deletechar"          . "⌦")
                   ("RET"                 . "⏎"))))
 
-;; email - notmuch
-
-;; E-mail is set using the following applications:
-
-;; - to retrieve: [[http://isync.sourceforge.net/][isync(mbsync)]]
-;; - to send: [[http://msmtp.sourceforge.net/][msmtp]]
-;; - to index and search: notmuch
-;; - to read (frontend): notmuch
+;; notmuch main configuration
 
 (use-package notmuch
   :bind (("C-c m" . notmuch))
   :config
   (validate-setq
-   notmuch-command "~/my-prj/dotfiles/remote-notmuch.sh"
+   ;;notmuch-command "~/my-prj/dotfiles/remote-notmuch.sh"
    notmuch-search-oldest-first nil          ; set default order newest -> oldest
    mail-specify-envelope-from t             ; settings to work with msmtp
    message-sendmail-envelope-from 'header
@@ -2365,8 +2358,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
   ;; Mark/unmark as deleted on notmuch-search-mode
   (define-key notmuch-search-mode-map "d"
-    (lambda ()
-      "toggle deleted tag for thread"
+    (lambda () "toggle deleted tag for thread"
       (interactive)
       (if (member "deleted" (notmuch-search-get-tags))
           (notmuch-search-tag '("-deleted"))
@@ -2374,8 +2366,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
   ;; Mark/unmark as deleted on notmuch-show-mode
   (define-key notmuch-show-mode-map "d"
-    (lambda ()
-      "toggle deleted tag for message"
+    (lambda () "toggle deleted tag for message"
       (interactive)
       (if (member "deleted" (notmuch-show-get-tags))
           (notmuch-show-tag '("-deleted"))
@@ -2383,8 +2374,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
   ;; Mark/unmark as unread on notmuch-search-mode
   (define-key notmuch-search-mode-map "!"
-    (lambda ()
-      "toggle unread tag for thread"
+    (lambda () "toggle unread tag for thread"
       (interactive)
       (if (member "unread" (notmuch-search-get-tags))
           (notmuch-search-tag '("-unread"))
@@ -2392,8 +2382,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
   ;; Mark/unmark as archived on notmuch-search-mode
   (define-key notmuch-search-mode-map "a"
-    (lambda ()
-      "toggle archive"
+    (lambda () "toggle archive"
       (interactive)
       (if (member "archive" (notmuch-search-get-tags))
           (notmuch-search-tag '("-archive"))
@@ -2401,8 +2390,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
   ;; Mark/unmark as archived on notmuch-show-mode
   (define-key notmuch-show-mode-map "a"
-    (lambda ()
-      "toggle archive"
+    (lambda () "toggle archive"
       (interactive)
       (if (member "archive" (notmuch-show-get-tags))
           (notmuch-show-tag '("-archive"))
@@ -2410,8 +2398,7 @@ _h_tml    ^ ^         ^ ^             _A_SCII:
 
   ;; Show only unread messages on notmuch-search-mode
   (define-key notmuch-search-mode-map "u"
-    (lambda ()
-      "show only unread messages"
+    (lambda () "show only unread messages"
       (interactive)
       (notmuch-search-filter-by-tag "unread")))
 
