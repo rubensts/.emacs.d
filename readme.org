@@ -1,7 +1,7 @@
 #+TITLE:     My Emacs Configuration
 #+AUTHOR:    Rubens.TS
 #+EMAIL:     rubensts@gmail.com
-#+DATE:      2016-09-27
+#+DATE:      2017-04-13
 #+LANGUAGE:  en
 #+PROPERTY: header-args :tangle init.el :comments org
 #+OPTIONS: author:nil date:nil toc:2 title:nil e:nil
@@ -26,7 +26,8 @@
 :ID:       50f37a2f-42cc-4628-b7fa-30fb85c0ffbc
 :END:
 
-*ATTENTION - This is a work in progress*
+*ATTENTION:* This is a work in progress
+
 *ATTENTION:* This configuration has been tested on Emacs 25.
 
 ** Emacs Configuration using Org-Babel
@@ -145,7 +146,7 @@ You can notice that there isn't an =init.el= file present in this
 repository. To generate it the first time you just have to run the
 following command:
 
-#+BEGIN_EXAMPLE bash 
+#+BEGIN_EXAMPLE bash
 $ /usr/bin/emacs ~/.emacs.d/readme.org --batch --eval='(org-babel-tangle)'
 #+END_EXAMPLE
 
@@ -163,3 +164,560 @@ bother tracking it:
 git update-index --assume-unchanged init.el
 #+END_EXAMPLE
 
+* Packages Setup
+
+To automatized package intallation I've started using ~use-package~,
+which gives a concise and powerful way to organize Emacs configuration
+avoiding the terrible "config bankrupcy".
+
+** Debugging
+
+#+BEGIN_SRC emacs-lisp
+  (setq message-log-max 10000)
+#+END_SRC
+
+** Package management
+
+#+BEGIN_SRC emacs-lisp
+  ;; Avoid accidentally using outdated compiled files
+  (setq load-prefer-newer t)
+
+  ;; By default package-initialize is called after init.el.
+  ;; Calling it here because some packages listed depend on it.
+  (package-initialize)
+
+  ;; Assures package-initialize is not called again after init.el.
+  (setq package-enable-at-startup nil)
+
+  ;; Sets the ELPA repositories from where packages are fetched
+  (add-to-list 'package-archives
+ '("org" . "http://orgmode.org/elpa/") t)
+  (add-to-list 'package-archives
+               '("melpa" . "https://melpa.org/packages/"))
+
+  ;; Automatically compile Emacs Lisp libraries
+  ;;(require 'auto-compile)
+  ;;(auto-compile-on-load-mode)
+  ;;(auto-compile-on-save-mode)
+
+  ;; Bootstrap `use-package'
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+
+  (eval-when-compile
+    (require 'use-package)
+    (setq-default use-package-always-defer t
+                  use-package-always-ensure t))
+
+  (require 'subr-x)
+  (require 'time-date)
+
+  ;; Help keeping ~/.emacs.d clean
+  (use-package no-littering
+    :demand t)
+
+  (use-package validate
+    :demand t)
+
+  ;; load libraries
+  (use-package s)
+  (use-package f)
+#+END_SRC
+
+** Initialization
+
+#+BEGIN_SRC emacs-lisp
+  (when (version< emacs-version "25")
+    (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
+
+  ;; Disables calling default.el (default settings) after init.el
+  (setq inhibit-default-init t)
+#+END_SRC
+
+** Emacs server
+
+Loads Emacs as a server, allowing it to answer to client calls coming from
+~emacsclient~.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package server
+    :init (server-mode))
+#+END_SRC
+
+* Built-in Capabilities
+** sensible-defaults.el
+
+Use [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]] for some basic settings.
+
+#+BEGIN_SRC emacs-lisp
+  (load-file "~/git/sensible-defaults.el/sensible-defaults.el")
+  (sensible-defaults/use-all-settings)
+  (sensible-defaults/use-all-keybindings)
+#+END_SRC
+
+** OS compatibility
+
+Check which OS for keeping compatibility.
+
+#+BEGIN_SRC emacs-lisp
+   (defun system-is-mac ()
+     (interactive)
+     (string-equal system-type "darwin"))
+
+   (defun system-is-linux ()
+     (interactive)
+     (string-equal system-type "gnu/linux"))
+
+   ;; Settings in case OS is Mac
+   (if (system-is-mac)
+       (toggle-frame-fullscreen))       ;; fullscreen
+#+END_SRC
+
+* Main packages
+** org
+
+[[http://orgmode.org/][Org mode]] is for keeping notes, maintaining TODO lists, planning projects, and
+authoring documents with a fast and effective plain-text system...bu not only :)
+
+Actually, org-mode is the solely reason why many people recently have decided to
+try Emacs, then they are hooked ;)
+
+| Keys        | Command | Results                    |
+|-------------+---------+----------------------------|
+| C-c C-x C-l |         | Show latex fragments       |
+| C-c C-c     |         | Get rid of latex fragments |
+
+*** general settings
+
+#+BEGIN_SRC emacs-lisp
+(use-package org
+  :ensure org-plus-contrib
+  :bind  (("C-c a" . org-agenda-list)
+          ("C-c c" . org-capture)
+          ("C-c l" . org-store-link)
+          ;;("C-c f" . org-cycle-agenda-files)
+          ;;("C-c s" . org-search-view)
+          ("C-c t" . org-todo-list))
+  :config
+  (validate-setq
+   org-tags-column 90                      ; column to which the tags have to be indented
+   org-ellipsis "⤵"                        ; ⬎, ⤷, ⤵, ⚡
+   org-fontify-whole-heading-line t        ; fontify the whole line for headings
+   org-fontify-done-headline t
+   org-fontify-quote-and-verse-blocks t
+   org-startup-indented t
+   org-hide-emphasis-markers t             ; hide markup elements, e.g. * *, / /, _ _
+   org-cycle-include-plain-lists t
+   org-list-allow-alphabetical t
+   org-latex-create-formula-image-program 'imagemagick   ; preview latex fragments
+
+   ;; Code blocks to play nicelly on org-babel
+   org-edit-src-content-indentation 0      ; number of whitespaces added to the code block indentation (after #begin)
+   org-src-tab-acts-natively t             ; TAB acts natively as it was in the language major mode
+   org-src-preserve-indentation t          ; preserve indentation when exporting blocks
+   org-src-fontify-natively t              ; highlights code-blocks natively
+   org-src-window-setup 'current-window    ; open code-blocks in the current window
+   org-confirm-babel-evaluate nil          ; don't ask for confirmation when compiling code-blocks
+
+   ;; Files location
+   org-directory "~/org"
+   org-default-notes-file (concat org-directory "/notes.org")
+   org-agenda-files (list "~/org/todo.org"
+                          "~/org/clockin.org"))
+
+  ;; TODO workflow states
+  org-todo-keywords
+  '("☛ TODO(t)" "⚑ WAIT(w@)" "|" "✔ DONE(d)" "✘ CANCEL(c@)")
+
+  ;; TODO fontification
+  org-todo-keyword-faces
+  '(("☛ TODO"   . (:foreground "#ff4500" :weight bold))
+    ("✔ DONE"   . (:foreground "#00ff7f" :weight bold))
+    ("⚑ WAIT"   . (:foreground "#ffff00" :weight bold))
+    ("✘ CANCEL" . (:foreground "#00bfff" :weight bold)))
+  )
+#+END_SRC
+
+*** org-clock
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-clock
+    :ensure org-plus-contrib
+    :demand t
+    :config
+    (org-clock-persistence-insinuate)           ; resume clocking task when emacs is restarted
+    (validate-setq
+     org-clock-persist t                        ; save all clock history when exiting Emacs, load it on startup
+     org-clock-persist-query-resume nil         ; do not prompt to resume an active clock
+     org-clock-history-length 10                ; show lot of clocking history from where choose items
+     org-clock-in-resume t                      ; resume clocking task on clock-in if the clock is open
+     org-clock-into-drawer "CLOCKING"           ; clocking goes into specfic drawer
+     org-clock-report-include-clocking-task t)) ; include current clocking task in clock reports
+#+END_SRC
+
+*** org-capture-templates
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-protocol
+    :ensure org-plus-contrib
+    :demand t
+    :config
+    ;; Define capture templates
+    (setq org-capture-templates
+          '(("w" "Web bookmarks" entry
+             (file+headline (concat org-directory "/www.org") "Bookmarks")
+             "* %?%c %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%i\n"
+             :empty-lines 1
+             :immediate-finish)
+
+            ("t" "Tasks" entry
+             (file+headline (concat org-directory "/tasks.org") "Tasks")
+             "* ☛ TODO %^{Task} %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?%i"
+             :empty-lines 1)
+
+            ("n" "Notes" entry
+             (file+headline (concat org-directory "/notes.org") "Notes")
+             "* %^{Header} %^G\n %u\n %?")
+
+            ("j" "Journal" entry
+             (file+datetree (concat org-directory "/journal.org"))
+             "* %U %^{Title}\n %?%i\n %a")
+
+            ("a" "Articles" entry
+             (file+headline (concat org-directory "/articles.org") "Articles")
+             "* %^{Title} %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?%i\n"
+             :empty-lines 1
+             :immediate-finish)
+
+            ("r" "Redmine" entry
+             (file+datetree (concat org-directory "/clockin.org"))
+             "* [[https://redmine.2ndquadrant.it/issues/%^{Ticket}][%^{Description}]] :redmine:%^g\n%?"
+             :clock-in t
+             :clock-keep t
+             :empty-lines 1)
+
+            ("s" "RT - Support" entry
+             (file+datetree (concat org-directory "/clockin.org"))
+             "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :support:%^g\n%?"
+             :clock-in t
+             :clock-keep t
+             :empty-lines 1)
+
+            ("b" "RT - RDBA" entry
+             (file+datetree (concat org-directory "/clockin.org"))
+             "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :rdba:%^g\n%?"
+             :clock-in t
+             :clock-keep t
+             :empty-lines 1)
+            )))
+#+END_SRC
+
+*** org-bullets
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bullets
+    :demand t
+    :after org-plug-contrib
+    :config
+    ;;(setq org-bullets-bullet-list '("☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"))
+    ;;(setq org-bullets-bullet-list '("♣" "♥" "♠" "♦" "♧" "♡" "♤" "♢"))
+    (validate-setq org-bullets-bullet-list '("☯" "☉" "∞" "◉" "⊚" "☀" "☾" "☥"))
+    (add-hook 'org-mode-hook (lambda () (org-bullets-mode t)))
+
+    ;; make available "org-bullet-face" such that I can control the font size individually
+    (validate-setq org-bullets-face-name (quote org-bullet-face))
+    (custom-set-faces '(org-bullet-face
+                        ((t (:foreground "burlywood"
+                                         :weight normal
+                                         :height 1.6))))
+                      ))
+#+END_SRC
+
+*** ox.el
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox
+    :ensure org-plus-contrib
+    :config
+    (validate-setq org-export-with-smart-quotes t))
+#+END_SRC
+
+*** ox-pandoc
+
+I’m using ox-pandoc to export org files to all formats Pandoc works with. It
+only exports org files, in opposite of pandoc-mode, which exports from any
+source format. The problem is that ox-pandoc needs considerably less
+configuration and as I usually write everything in org-mode, no need to worry.
+https://github.com/kawabata/ox-pandoc
+http://www.rousette.org.uk/blog/archives/org-mode-and-pandoc/ Keeping a lab book
+with org-mode http://informatica.boccaperta.com/m-x-emacs-ox-pandoc/
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-pandoc
+    :after org-plus-contrib
+    :config
+    (validate-setq org-pandoc-options '((standalone . t))            ; default options for all output formats
+                   org-pandoc-options-for-docx '((standalone . nil)) ; cancel above settings only for 'docx' format
+                   org-pandoc-options-for-beamer-pdf                 ; special settings for beamer-pdf
+                   '((latex-engine . "lualatex"))
+                   org-pandoc-options-for-latex-pdf                  ; and for latex-pdf exporters
+                   '((latex-engine . "lualatex"))
+
+                   ;; Use external css for html5
+                   ;; (let ((stylesheet (expand-file-name
+                   ;;                    (locate-user-emacs-file "etc/pandoc.css"))))
+                   ;;   (setq org-pandoc-options-for-html5
+                   ;;         `((css . ,(concat "file://" stylesheet)))))
+                   )
+    )
+#+END_SRC
+
+*** org-babel
+
+Babel is Org-mode’s ability to execute source code within Org-mode documents.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ob
+    :ensure org-plus-contrib
+    :config
+    (org-babel-do-load-languages
+     (quote org-babel-load-languages)
+     (quote ((calc . t)
+             (clojure . t)
+             (ditaa . t)
+             (dot . t)
+             (emacs-lisp . t)
+             (gnuplot . t)
+             (latex . t)
+             (ledger . t)
+             (octave . t)
+             (org . t)
+             (makefile . t)
+             (plantuml . t)
+             (python . t)
+             (R . t)
+             (ruby . t)
+             (sh . t)
+             (sqlite . t)
+             (sql . t)
+             ))))
+#+END_SRC
+
+* Appearance
+** Themes
+
+Here is a list of some themes I like. Just enable it on the configuration below;
+don't forget the disable the one that is active.
+
+- [[https://github.com/jordonbiondo/ample-theme][ample-themes]]
+- [[https://github.com/waymondo/apropospriate-theme][apropospriate-theme]]
+- [[https://github.com/cpaulik/emacs-material-theme][material-theme]]
+- [[https://github.com/oneKelvinSmith/monokai-emacs][monokai-theme]]
+- [[https://github.com/purcell/color-theme-sanityinc-tomorrow][sanityinc-tomorrow]]
+- [[https://github.com/bbatsov/solarized-emacs][solarized-theme]]
+- [[https://github.com/fniessen/emacs-leuven-theme][leuven-theme]]
+- [[https://github.com/bbatsov/zenburn-emacs][zenburn-theme]]
+- [[https://github.com/nashamri/spacemacs-theme][spacemacs-theme]]
+
+Some themes, as solarized and material, change the pitch size of org-headers,
+leaving them a little too big for my taste, so I adjust them. I'm adjusting the
+~material-theme~ below. If you want to change the ~solarized-theme~ instead, check
+[[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][here]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package leuven-theme
+  :disabled t
+  :init
+  (load-theme 'leuven t)
+  (setq leuven-scale-outline-headlines nil))
+
+(use-package doom-themes
+  :disabled t
+  :init
+  (load-theme 'doom-one t)
+  (setq doom-enable-brighter-comments t)      ; comments are easy to see
+  (add-hook 'find-file-hook
+            'doom-buffer-mode)                ; brighter source buffers
+  (add-hook 'minibuffer-setup-hook
+            'doom-brighten-minibuffer)        ; brighter minibuffer when active
+  (require 'doom-neotree))                    ; custom neotree theme
+
+(use-package zerodark-theme
+  :demand t
+  :init
+  (load-theme 'zerodark t)
+  (zerodark-setup-modeline-format))
+
+(use-package material-theme
+  :disabled t
+  :init
+  (load-theme 'material t)
+  :config
+  (custom-theme-set-faces
+   'material
+   `(org-level-1 ((t (:inherit outline-1
+                               :background ,"#455A64"
+                               :weight bold
+                               :box (:style released-button)
+                               :height 1.1))))
+   `(org-level-2 ((t (:inherit outline-2
+                               :background ,"#35575b"
+                               :box (:style released-button)
+                               :height 1.0))))
+   `(org-level-3 ((t (:inherit outline-3 :height 1.0))))
+   `(org-level-4 ((t (:inherit outline-4 :height 1.0))))
+   `(org-level-5 ((t (:inherit outline-5 ))))
+   `(org-level-6 ((t (:inherit outline-6 ))))
+   `(org-level-7 ((t (:inherit outline-7 ))))
+   `(org-level-8 ((t (:inherit outline-8 ))))
+   `(org-level-9 ((t (:inherit outline-9 ))))
+   ))
+ #+END_SRC
+
+** Fonts
+
+#+BEGIN_SRC emacs-lisp
+  (cond ((eq system-type 'gnu/linux)
+         (set-face-attribute 'default nil
+                             :family "Source Code Pro"
+                             :height 90)
+         (set-face-attribute 'variable-pitch nil
+                             :family "Fira Sans"
+                             :height 100
+                             :weight 'regular))
+
+        ((eq system-type 'darwin)
+         (set-face-attribute 'default nil
+                             :family "Source Code Pro"
+                             :height 100)))
+
+;; Set a smaller font for the mode line
+;; (set-face-attribute 'mode-line nil
+;;                     :family "Source Code Pro"
+;;                     :height 90)
+
+    ;; Set a font with great support for Unicode Symbols to fallback in
+    ;; those case where certain Unicode glyphs are missing in the
+    ;; current font. Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
+    ;; (set-fontset-font "fontset-default" nil
+    ;;                   (font-spec :size 20 :name "Symbola"))
+
+    ;;  (set-fontset-font "fontset-default" 'unicode "Dejavu Sans Mono")
+
+
+    ;; Font setup
+    (defun my-configure-fonts (frame)
+      "Set up fonts for FRAME.
+    Set the default font, and configure various overrides for
+    symbols, emojis, greek letters, as well as fall backs for."
+      ;; Additional fonts for special characters and fallbacks
+      ;; Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
+      (dolist (script '(symbol mathematical))
+        (set-fontset-font t script (font-spec :family "XITS Math")
+                          frame 'prepend))
+
+      ;; Define a font set stack for symbols, greek and math characters
+      (dolist (script '(symbol greek mathematical))
+        (set-fontset-font t script (font-spec :family "Arial Unicode MS")
+                          frame 'prepend)
+        (set-fontset-font t script (font-spec :family "Menlo")
+                          frame 'prepend)
+        (set-fontset-font t script (font-spec :family "DejaVu Sans Mono")
+                          frame 'prepend))
+
+      (when (eq system-type 'darwin)
+        ;; Colored Emoji on OS X, prefer over everything else!
+        (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
+                          frame 'prepend))
+
+      ;; Fallbacks for math and generic symbols
+      (set-fontset-font t nil (font-spec :family "Apple Symbols")
+                        frame 'append))
+
+    (when-let (frame (selected-frame))
+      (my-configure-fonts frame))
+    (add-hook 'after-make-frame-functions #'my-configure-fonts)
+#+END_SRC
+
+** Modeline
+*** all-the-icons
+
+[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] is a utility package to collect various Icon Fonts and propertize
+them within Emacs.
+
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons
+  :demand t)
+#+END_SRC
+
+*** delight
+
+Delight enables you to easily customise how major and minor modes appear in the
+ModeLine.
+
+It is similar in purpose to DiminishedModes but it accounts for major modes as
+well as minor modes, and also incorporates the necessary ‘eval-after-load’ call
+for minor modes, which makes the configuration simpler.
+
+#+BEGIN_SRC emacs-lisp
+(use-package delight
+  :demand t
+  :config
+  (delight '((company-mode " Ⓐ" company)
+             (hs-minor-mode " ⓗ" hideshow)
+             (outline-minor-mode " Ⓞ" outline)
+             (outline-mode " Ⓞ" :major)
+             (git-gutter-mode " Ⓖ" git-gutter)
+             (flyspell-mode " Ⓕ" flyspell)
+             (smartparens-mode " Ⓢ" smartparens)
+             (elisp-slime-nav-mode nil elisp-slime-nav)
+             (emacs-lisp-mode "Elisp" :major)
+             (lisp-interaction-mode "LispI" :major)
+             (ess-noweb-font-lock-mode nil ess)
+             (reftex-mode " Ⓡ" reftex)
+             (visual-line-mode " Ⓦ" simple)
+             (ess-noweb-mode " Ⓝ" ess)
+             (anzu-mode " Ⓩ" anzu)
+             (abbrev-mode " ⓐ" abbrev)
+             (helm-mode " Ⓗ" helm)
+             (rainbow-mode)
+             (org-indent-mode nil org-indent)
+             (which-key-mode nil which-key)
+             (counsel-mode nil counsel)
+             (ivy-mode nil ivy)
+             (fixmee-mode nil fixmee)
+             (button-lock-mode nil button-lock)
+             (beacon-mode nil beacon)
+             (page-break-lines-mode nil page-break-lines)
+             (auto-revert-mode nil autorevert)
+             (undo-tree-mode nil undo-tree)
+             ;;(server-buffer-clients . " ⓒ")
+             )))
+#+END_SRC
+
+*** spaceline
+
+#+BEGIN_SRC emacs-lisp
+(use-package spaceline
+  :disabled t
+  :config
+  (setq powerline-default-separator 'wave
+        spaceline-window-numbers-unicode t
+        spaceline-workspace-numbers-unicode t))
+
+(use-package spaceline-config
+  :disabled t
+  :ensure nil
+  :config
+  (spaceline-spacemacs-theme))
+#+END_SRC
+
+** Other details
+
+Better looking break lines.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package page-break-lines
+    :init (global-page-break-lines-mode))
+#+END_SRC
