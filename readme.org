@@ -166,9 +166,9 @@ git update-index --assume-unchanged init.el
 
 * Packages Setup
 
-To automatized package intallation I've started using ~use-package~,
-which gives a concise and powerful way to organize Emacs configuration
-avoiding the terrible "config bankrupcy".
+To automatized package intallation I've started using ~use-package~, which gives a
+concise and powerful way to organize Emacs configuration avoiding the terrible
+"config bankrupcy".
 
 ** Debugging
 
@@ -179,50 +179,50 @@ avoiding the terrible "config bankrupcy".
 ** Package management
 
 #+BEGIN_SRC emacs-lisp
-  ;; Avoid accidentally using outdated compiled files
-  (setq load-prefer-newer t)
+;; Avoid accidentally using outdated compiled files
+(setq load-prefer-newer t)
 
-  ;; By default package-initialize is called after init.el.
-  ;; Calling it here because some packages listed depend on it.
-  (package-initialize)
+;; Load package here allows to add the new repositories listed below
+(require 'package)
 
-  ;; Assures package-initialize is not called again after init.el.
-  (setq package-enable-at-startup nil)
+;; Assures package-initialize is not called again after init.el.
+(setq package-enable-at-startup nil)
 
-  ;; Sets the ELPA repositories from where packages are fetched
-  (add-to-list 'package-archives
- '("org" . "http://orgmode.org/elpa/") t)
-  (add-to-list 'package-archives
-               '("melpa" . "https://melpa.org/packages/"))
+;; Sets the ELPA repositories from where packages are fetched
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/")
+             '("org" . "http://orgmode.org/elpa/"))
 
-  ;; Automatically compile Emacs Lisp libraries
-  ;;(require 'auto-compile)
-  ;;(auto-compile-on-load-mode)
-  ;;(auto-compile-on-save-mode)
+;; By default package-initialize is called after init.el.
+;; Calling it here because some packages listed depend on it.
+(package-initialize)
 
-  ;; Bootstrap `use-package'
-  (unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package))
+;; Automatically compile Emacs Lisp libraries
+;;(require 'auto-compile)
+;;(auto-compile-on-load-mode)
+;;(auto-compile-on-save-mode)
 
-  (eval-when-compile
-    (require 'use-package)
-    (setq-default use-package-always-defer t
-                  use-package-always-ensure t))
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
-  (require 'subr-x)
-  (require 'time-date)
+(eval-when-compile
+  (require 'use-package)
+  (setq-default use-package-always-defer t
+                use-package-always-ensure t))
 
-  ;; Help keeping ~/.emacs.d clean
-  (use-package no-littering
-    :demand t)
+(require 'subr-x)
+(require 'time-date)
 
-  (use-package validate
-    :demand t)
+;; Help keeping ~/.emacs.d clean
+(use-package no-littering :demand t)
 
-  ;; load libraries
-  (use-package s)
-  (use-package f)
+(use-package validate :demand t)
+
+;; load libraries
+(use-package s)
+(use-package f)
 #+END_SRC
 
 ** Initialization
@@ -246,6 +246,22 @@ Loads Emacs as a server, allowing it to answer to client calls coming from
 #+END_SRC
 
 * Built-in Capabilities
+** OS compatibility
+
+Check which OS for keeping compatibility.
+The functions ~system-is-mac~ and ~system-is-linux~ is called throughout this org
+file.
+
+#+BEGIN_SRC emacs-lisp
+(defun system-is-mac ()
+  (interactive)
+  (string-equal system-type "darwin"))
+
+(defun system-is-linux ()
+  (interactive)
+  (string-equal system-type "gnu/linux"))
+#+END_SRC
+
 ** sensible-defaults.el
 
 Use [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]] for some basic settings.
@@ -256,25 +272,135 @@ Use [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]] for so
   (sensible-defaults/use-all-keybindings)
 #+END_SRC
 
-** OS compatibility
+** Better Defaults
 
-Check which OS for keeping compatibility.
+Other personal preferences not covered by [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]].
 
 #+BEGIN_SRC emacs-lisp
-   (defun system-is-mac ()
-     (interactive)
-     (string-equal system-type "darwin"))
+;; Fullscreen
+(cond ((system-is-mac) (toggle-frame-fullscreen))
+      ((system-is-linux) (add-to-list 'default-frame-alist
+                                      '(fullscreen . maximized))))
 
-   (defun system-is-linux ()
-     (interactive)
-     (string-equal system-type "gnu/linux"))
+;; disable menu, tool-bar and scroll-bar
+(when (window-system)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1))
 
-   ;; Settings in case OS is Mac
-   (if (system-is-mac)
-       (toggle-frame-fullscreen))       ;; fullscreen
+(setq apropos-do-all t                        ; apropos commands perform more extensive searches than default
+      x-select-enable-clipboard t             ; allows pasting selection outside of Emacs
+      echo-keystrokes 0.1                     ; shows keystrokes in progress
+      use-dialog-box nil                      ; don't use dialog when using mouse click
+      line-spacing '0.10                      ; line height
+      )
+
+(blink-cursor-mode -1)                        ; turn of the blinking cursor
+;;(fringe-mode '(1 . 1))                      ; thinner window divisions
+(defalias 'list-buffers 'ibuffer)             ; use ibuffer by default
+(global-hl-line-mode 1)                       ; highlight the current line
+(global-visual-line-mode t)                   ; break long line of text
+(global-prettify-symbols-mode 1)              ; prettify symbols (lambdas, etc)
+
+;;(save-place-mode 1)                           ; save cursor position for opened files
+;;(setq save-place-file
+;;      (concat tmp-directory "places"))
+
+(setq-default indicate-empty-lines t)         ; show empty lines at bottom of buffer
+(when (not indicate-empty-lines)
+  (toggle-indicate-empty-lines))
+
+(setq-default indent-tabs-mode  nil           ; always indent with spaces
+              default-tab-width 4
+              c-basic-offset 4)
+
+(set-terminal-coding-system  'utf-8)          ; make sure that UTF-8 is used everywhere
+(set-keyboard-coding-system  'utf-8)
+(set-language-environment    'utf-8)
+(set-selection-coding-system 'utf-8)
+(setq locale-coding-system   'utf-8)
+(prefer-coding-system        'utf-8)
+(set-input-method nil)
+
+;; settings for the modeline
+(column-number-mode t)                        ; shows column number on the modeline
+(setq size-indication-mode t)
+;;(which-function-mode 1)
+
+;; silence the beep sound, and shows the alarm bell visually on the modeline
+(setq ring-bell-function (lambda ()
+                           (invert-face 'mode-line)
+                           (run-with-timer 0.1 nil
+                                           'invert-face 'mode-line)))
+
+;; text wrapping at 80 columns by default (only text)
+;; (add-hook 'text-mode-hook 'turn-on-auto-fill)
+;; (add-hook 'text-mode-hook
+;;           '(lambda() (set-fill-column 80)))
+
+;; browser settings
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "firefox")
 #+END_SRC
 
 * Main packages
+** evil
+
+Evil configuration taken from https://ilikewhenit.works/blog/6
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil
+  :demand t
+  :config
+  (evil-mode 1)
+
+  (with-eval-after-load 'evil-maps
+    ;;(define-key evil-motion-state-map (kbd "SPC") nil)
+    (define-key evil-motion-state-map (kbd "RET") nil)
+    (define-key evil-motion-state-map (kbd "TAB") nil))
+  )
+
+(use-package evil-leader
+  :after evil
+  :config
+  (global-evil-leader-mode)
+  (evil-leader/set-leader "<SPC>")
+  (evil-leader/set-key
+    "e" 'find-file
+    "bb" 'switch-to-buffer
+    "bd" 'kill-buffer-and-window
+    "by" 'copy-whole-buffer
+    "cy" 'clipboard-kill-ring-save
+    "cp" 'clipboard-yank
+    "fs" 'save-buffer
+    "gs" 'magit-status
+    "hs" 'split-window-horizontally
+    "iu" 'insert-char
+    "lf" 'load-file
+    "ne" 'flycheck-next-error
+    "pe" 'flycheck-previous-error
+    "rm" 'notmuch
+    "sm" 'message-send-and-exit
+    "si" 'whitespace-mode
+    "tn" 'linum-mode
+    "w1" 'delete-other-windows
+    "wk" 'windmove-left
+    "wj" 'windmove-right
+    "qq" 'save-buffers-kill-emacs
+    "zp" 'zeal-at-point
+    ))
+
+(use-package evil-surround
+  :after evil
+  :config
+  (global-evil-surround-mode))
+
+(use-package evil-indent-plus
+  :after evil
+  :config
+  (evil-indent-plus-default-bindings))
+#+END_SRC
+
 ** org
 
 [[http://orgmode.org/][Org mode]] is for keeping notes, maintaining TODO lists, planning projects, and
@@ -342,18 +468,18 @@ try Emacs, then they are hooked ;)
 *** org-clock
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org-clock
-    :ensure org-plus-contrib
-    :demand t
-    :config
-    (org-clock-persistence-insinuate)           ; resume clocking task when emacs is restarted
-    (validate-setq
-     org-clock-persist t                        ; save all clock history when exiting Emacs, load it on startup
-     org-clock-persist-query-resume nil         ; do not prompt to resume an active clock
-     org-clock-history-length 10                ; show lot of clocking history from where choose items
-     org-clock-in-resume t                      ; resume clocking task on clock-in if the clock is open
-     org-clock-into-drawer "CLOCKING"           ; clocking goes into specfic drawer
-     org-clock-report-include-clocking-task t)) ; include current clocking task in clock reports
+(use-package org-clock
+  :ensure org-plus-contrib
+  :demand t
+  :config
+  (org-clock-persistence-insinuate)           ; resume clocking task when emacs is restarted
+  (validate-setq
+   org-clock-persist t                        ; save all clock history when exiting Emacs, load it on startup
+   org-clock-persist-query-resume nil         ; do not prompt to resume an active clock
+   org-clock-history-length 10                ; show lot of clocking history from where choose items
+   org-clock-in-resume t                      ; resume clocking task on clock-in if the clock is open
+   org-clock-into-drawer "CLOCKING"           ; clocking goes into specfic drawer
+   org-clock-report-include-clocking-task t)) ; include current clocking task in clock reports
 #+END_SRC
 
 *** org-capture-templates
@@ -478,30 +604,41 @@ with org-mode http://informatica.boccaperta.com/m-x-emacs-ox-pandoc/
 Babel is Org-mode’s ability to execute source code within Org-mode documents.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ob
-    :ensure org-plus-contrib
-    :config
-    (org-babel-do-load-languages
-     (quote org-babel-load-languages)
-     (quote ((calc . t)
-             (clojure . t)
-             (ditaa . t)
-             (dot . t)
-             (emacs-lisp . t)
-             (gnuplot . t)
-             (latex . t)
-             (ledger . t)
-             (octave . t)
-             (org . t)
-             (makefile . t)
-             (plantuml . t)
-             (python . t)
-             (R . t)
-             (ruby . t)
-             (sh . t)
-             (sqlite . t)
-             (sql . t)
-             ))))
+(use-package ob
+  :ensure org-plus-contrib
+  :config
+  (org-babel-do-load-languages
+   (quote org-babel-load-languages)
+   (quote ((calc . t)
+           (clojure . t)
+           (ditaa . t)
+           (dot . t)
+           (emacs-lisp . t)
+           (gnuplot . t)
+           (latex . t)
+           (ledger . t)
+           (octave . t)
+           (org . t)
+           (makefile . t)
+           (plantuml . t)
+           (python . t)
+           (R . t)
+           (ruby . t)
+           (sh . t)
+           (sqlite . t)
+           (sql . t)
+           ))))
+#+END_SRC
+
+* Indent
+
+#+BEGIN_SRC emacs-lisp
+(use-package aggressive-indent
+ :demand t
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+  )
 #+END_SRC
 
 * Appearance
@@ -535,22 +672,43 @@ leaving them a little too big for my taste, so I adjust them. I'm adjusting the
 (use-package doom-themes
   :disabled t
   :init
+  ;; Settings (defaults)
+  (setq doom-enable-bold t    ; if nil, bolding are universally disabled
+        doom-enable-italic t  ; if nil, italics are universally disabled
+
+        ;; doom-one specific settings
+        doom-one-brighter-modeline nil
+        doom-one-brighter-comments nil)
+
+  ;; Load the theme (doom-one, doom-dark, etc.)
   (load-theme 'doom-one t)
-  (setq doom-enable-brighter-comments t)      ; comments are easy to see
-  (add-hook 'find-file-hook
-            'doom-buffer-mode)                ; brighter source buffers
-  (add-hook 'minibuffer-setup-hook
-            'doom-brighten-minibuffer)        ; brighter minibuffer when active
-  (require 'doom-neotree))                    ; custom neotree theme
+
+  ;; OPTIONAL
+  ;; brighter source buffers (that represent files)
+  (add-hook 'find-file-hook 'doom-buffer-mode-maybe)
+  ;; if you use auto-revert-mode
+  (add-hook 'after-revert-hook 'doom-buffer-mode-maybe)
+  ;; you can brighten other buffers (unconditionally) with:
+  (add-hook 'ediff-prepare-buffer-hook 'doom-buffer-mode)
+
+  ;; brighter minibuffer when active
+  (add-hook 'minibuffer-setup-hook 'doom-brighten-minibuffer)
+
+  ;; Enable custom neotree theme
+  (require 'doom-neotree)    ; all-the-icons fonts must be installed!
+
+  ;; Enable nlinum line highlighting
+  (require 'doom-nlinum)     ; requires nlinum and hl-line-mode
+  )
 
 (use-package zerodark-theme
-  :demand t
+  :disabled t
   :init
   (load-theme 'zerodark t)
   (zerodark-setup-modeline-format))
 
 (use-package material-theme
-  :disabled t
+  :demand t
   :init
   (load-theme 'material t)
   :config
@@ -647,8 +805,7 @@ leaving them a little too big for my taste, so I adjust them. I'm adjusting the
 them within Emacs.
 
 #+BEGIN_SRC emacs-lisp
-(use-package all-the-icons
-  :demand t)
+(use-package all-the-icons :demand t)
 #+END_SRC
 
 *** delight
@@ -700,14 +857,14 @@ for minor modes, which makes the configuration simpler.
 
 #+BEGIN_SRC emacs-lisp
 (use-package spaceline
-  :disabled t
+  :demand t
   :config
   (setq powerline-default-separator 'wave
         spaceline-window-numbers-unicode t
         spaceline-workspace-numbers-unicode t))
 
 (use-package spaceline-config
-  :disabled t
+  :demand t
   :ensure nil
   :config
   (spaceline-spacemacs-theme))
