@@ -190,7 +190,8 @@ concise and powerful way to organize Emacs configuration avoiding the terrible
 
 ;; Sets the ELPA repositories from where packages are fetched
 (add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/")
+             '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives
              '("org" . "http://orgmode.org/elpa/"))
 
 ;; By default package-initialize is called after init.el.
@@ -343,6 +344,127 @@ Other personal preferences not covered by [[https://github.com/hrs/sensible-defa
       browse-url-generic-program "firefox")
 #+END_SRC
 
+** Scrolling
+
+#+BEGIN_SRC emacs-lisp
+(setq scroll-margin 0
+      scroll-conservatively 100000
+      scroll-preserve-screen-position 1
+      mouse-wheel-scroll-amount '(1 ((shift) . 1))
+      mouse-wheel-progressive-speed nil
+      mouse-wheel-follow-mouse 't)
+#+END_SRC
+
+** Useful functions
+
+These functions are useful. Activate them.
+
+#+BEGIN_SRC emacs-lisp
+  (put 'downcase-region 'disabled nil)
+  (put 'upcase-region 'disabled nil)
+  (put 'narrow-to-region 'disabled nil)
+  (put 'narrow-to-page 'disabled nil)
+  (put 'dired-find-alternate-file 'disabled nil)
+#+END_SRC
+
+** Custom functions
+*** Customizing the customize
+[[http://oremacs.com/2015/01/17/setting-up-ediff/][Oremacs source]] - This function is used in some point of this ~init.el~ file for
+setting custom variables. Basically it is a ~setq~ that is aware of the
+custom-set property of a variable.
+
+#+BEGIN_SRC emacs-lisp
+  (defmacro csetq (variable value)
+    `(funcall (or (get ',variable 'custom-set)
+                  'set-default)
+              ',variable ,value))
+#+END_SRC
+
+*** Split window and move
+
+I hate the default Emacs behavior of split windows which just splits the window
+but doesn’t go there.
+
+#+BEGIN_SRC emacs-lisp
+  (defun split-below-and-move ()
+    (interactive)
+    (split-window-below)
+    (other-window 1))
+
+  (defun split-right-and-move ()
+    (interactive)
+    (split-window-right)
+    (other-window 1))
+
+  (bind-keys ("C-x 2" . split-below-and-move)
+             ("C-x 3" . split-right-and-move))
+#+END_SRC
+
+*** Smarter start of line
+
+This function, from [[http://emacsredux.com/blog/2013/05/22/smarter-navigation-to-the-beginning-of-a-line/][emacsredux]] blog, defines a better start of line and remaps
+~C-a~ for it.
+
+#+BEGIN_SRC emacs-lisp
+  (defun smarter-move-beginning-of-line (arg)
+    "Move point back to indentation of beginning of line.
+
+  Move point to the first non-whitespace character on this line.
+  If point is already there, move to the beginning of the line.
+  Effectively toggle between the first non-whitespace character and
+  the beginning of the line.
+
+  If ARG is not nil or 1, move forward ARG - 1 lines first.  If
+  point reaches the beginning or end of the buffer, stop there."
+    (interactive "^p")
+    (setq arg (or arg 1))
+
+    ;; Move lines first
+    (when (/= arg 1)
+      (let ((line-move-visual nil))
+        (forward-line (1- arg))))
+
+    (let ((orig-point (point)))
+      (back-to-indentation)
+      (when (= orig-point (point))
+        (move-beginning-of-line 1))))
+
+  ;; remap C-a to `smarter-move-beginning-of-line'
+  (global-set-key [remap move-beginning-of-line]
+                  'smarter-move-beginning-of-line)
+
+  (global-set-key (kbd "C-a") 'smarter-move-beginning-of-line)
+#+END_SRC
+
+*** Kill the current buffer
+
+Change the key-binding to kill the current buffer instead of asking which one to
+kill. Very good tip taken from [[http://pragmaticemacs.com/emacs/dont-kill-buffer-kill-this-buffer-instead/][Pragmaticemacs]].
+
+#+BEGIN_SRC emacs-lisp
+  (global-set-key (kbd "C-x k") 'kill-this-buffer)
+#+END_SRC
+
+*** Org header IDs
+
+#+BEGIN_SRC emacs-lisp
+  (defun my/copy-id-to-clipboard() "Copy the ID property value to killring,
+  if no ID is there then create a new unique ID.
+  This function works only in org-mode buffers.
+
+  The purpose of this function is to easily construct id:-links to
+  org-mode items. If its assigned to a key it saves you marking the
+  text and copying to the killring."
+         (interactive)
+         (when (eq major-mode 'org-mode) ; do this only in org-mode buffers
+       (setq mytmpid (funcall 'org-id-get-create))
+       (kill-new mytmpid)
+       (message "Copied %s to killring (clipboard)" mytmpid)
+         ))
+
+  (global-set-key (kbd "<f5>") 'my/copy-id-to-clipboard)
+#+END_SRC
+
 * Main packages
 ** evil
 
@@ -368,7 +490,7 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
   (evil-leader/set-key
     "e" 'find-file
     "bb" 'switch-to-buffer
-    "bd" 'kill-buffer-and-window
+    "bd" 'kill-buffer
     "by" 'copy-whole-buffer
     "cy" 'clipboard-kill-ring-save
     "cp" 'clipboard-yank
@@ -384,6 +506,8 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
     "si" 'whitespace-mode
     "tn" 'linum-mode
     "w1" 'delete-other-windows
+    "w2" 'split-below-and-move
+    "w3" 'split-right-and-move
     "wk" 'windmove-left
     "wj" 'windmove-right
     "qq" 'save-buffers-kill-emacs
@@ -630,15 +754,452 @@ Babel is Org-mode’s ability to execute source code within Org-mode documents.
            ))))
 #+END_SRC
 
-* Indent
+** ivy
+[[https://github.com/abo-abo/swiper][Ivy]] is a generic completion frontend for Emacs.
+
+[[https://github.com/abo-abo/swiper][Swiper]] shows an overview during regex searching. It uses the /ivy/ back end for
+the overview.
+
+| Keybinding | Functions            | Result                               |
+|------------+----------------------+--------------------------------------|
+| =C-M-i=    | ivy-display-function | displays the function candidate list |
+
+*** ivy
 
 #+BEGIN_SRC emacs-lisp
-(use-package aggressive-indent
- :demand t
-  :config
-  (global-aggressive-indent-mode 1)
-  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
-  )
+  (use-package swiper
+    :demand t
+    :bind (("C-c C-r"  . ivy-resume)
+           ("C-s"      . swiper)
+           :map ivy-minibuffer-map
+           ("<return>" . ivy-alt-done)
+           ("C-M-h"    . ivy-previous-line-and-call)
+           ("C-:"      . ivy-dired)
+           ("C-c o"    . ivy-occur)
+           :map read-expression-map
+           ("C-r"      . counsel-expression-history)
+           )
+    :config
+    (ivy-mode 1)
+    (validate-setq ivy-use-virtual-buffers t         ; list `recentf' and bookmarks as well
+                   ivy-height 10
+                   ivy-count-format "(%d/%d) "       ; counter
+                   ivy-extra-directories nil         ; Do not show "./" and "../"
+                   ivy-virtual-abbreviate 'full      ; Show full file path
+                   ivy-re-builders-alist '((t . ivy--regex-plus))
+                   ivy-use-ignore-default 'always    ; ignore buffers set in `ivy-ignore-buffers'
+                   ivy-ignore-buffers                ; ignore some buffers in `ivy-switch-buffer'
+                   '("company-statistics-cache.el"
+                     ".elfeed/index")
+                   swiper-action-recenter t          ; always recenter when leaving swiper
+                   )
+
+    (defun ivy-dired ()
+      (interactive)
+      (if ivy--directory
+          (ivy-quit-and-run
+           (dired ivy--directory)
+           (when (re-search-forward
+                  (regexp-quote
+                   (substring ivy--current 0 -1)) nil t)
+             (goto-char (match-beginning 0))))
+        (user-error
+         "Not completing files currently")))
+
+    ;; Customize faces per mode
+    (validate-setq ivy-switch-buffer-faces-alist
+                   '((emacs-lisp-mode . swiper-match-face-1)
+                     (dired-mode . ivy-subdir)
+                     (org-mode . org-level-4)))
+    )
+
+  ;; Speed up my workflow with prearranged windows
+  ;; (setq ivy-views '(("boccaperta + ba-server [–]"
+  ;;                    (vert
+  ;;                     (sexp (bookmark-jump "boccaperta"))
+  ;;                     (sexp (bookmark-jump "ba-server"))))
+  ;;                   ("desktop + ba-server [–]"
+  ;;                    (vert
+  ;;                     (sexp (bookmark-jump "desktop"))
+  ;;                     (sexp (bookmark-jump "ba-server"))))))
+
+
+  ;; smex order selections accordingly to the most used ones
+  (use-package smex
+    :after swiper
+    :config
+ ;;   (validate-setq smex-save-file (concat
+ ;;                                  tmp-directory "smex-items"))
+)
+#+END_SRC
+
+*** counsel
+
+#+BEGIN_SRC emacs-lisp
+  (use-package counsel
+    :after swiper
+    :bind (("M-x"     . counsel-M-x)
+           ("C-x C-f" . counsel-find-file)
+           ("<f1> f"  . counsel-describe-function)
+           ("<f1> v"  . counsel-describe-variable)
+           ("<f1> l"  . counsel-load-library)
+           ("<f2> i"  . counsel-info-lookup-symbol)
+           ("<f2> u"  . counsel-unicode-char)
+           ("C-r"     . counsel-grep-or-swiper)
+           ("C-c g"   . counsel-git)
+           ("C-c j"   . counsel-git-grep)
+           ("C-c k"   . counsel-ag)
+           ("C-x l"   . counsel-locate)
+           ("C-c r"   . counsel-linux-app)
+           ("C-x i"   . counsel-imenu)
+           ("M-y"     . counsel-yank-pop))
+    :config
+    (validate-setq  counsel-mode-override-describe-bindings t
+                    counsel-find-file-at-point t
+                    counsel-find-file-ignore-regexp
+                    (concat
+                     "\\(?:\\`[#.]\\)"              ; file names beginning with # or .
+                     "\\|\\(?:\\`.+?[#~]\\'\\)"     ; file names ending with # or ~
+                     )))
+#+END_SRC
+
+* Base packages
+** ace-window
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ace-window)
+#+END_SRC
+
+** avy
+avy is a GNU Emacs package for jumping to visible text using a char-based
+decision tree. See also ace-jump-mode and vim-easymotion - avy uses the same
+idea.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package avy
+    :bind (("C-:" . avy-goto-char)
+           ("C-'" . avy-goto-char-2)
+           ("M-g f" . avy-goto-line)
+           ("M-g w" . avy-goto-word-1)
+           ("M-g e" . avy-goto-word-0))
+    :config
+    (setq avy-background t
+          avy-all-windows t
+          avy-style 'at-full
+          avy-case-fold-search nil)
+    (set-face-attribute 'avy-lead-face nil
+                        :foreground "gold"
+                        :weight 'bold
+                        :background nil)
+    (set-face-attribute 'avy-lead-face-0 nil
+                        :foreground "deep sky blue"
+                        :weight 'bold
+                        :background nil))
+#+END_SRC
+
+** beacon
+Never lose your cursor again. Whenever the window scrolls a light will shine on
+top of your cursor so you know where it is.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package beacon
+    :demand t
+    :config
+    (beacon-mode t)
+    (setq beacon-push-mark 35
+          beacon-color "#666600"))
+#+END_SRC
+
+** undo-tree
+
+=C-x u= to ~undo-tree-visualize~
+C-/ undo
+S-C-/ redo
+
+#+BEGIN_SRC emacs-lisp
+  (use-package undo-tree
+    :init
+    (global-undo-tree-mode))
+#+END_SRC
+
+** volatile-highlights
+
+It provides minor mode volatile-highlights-mode, which brings visual feedback
+to some operations (eg. pasting, etc) by highlighting portions relating to the
+operations.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package volatile-highlights
+    :config
+    (volatile-highlights-mode t))
+#+END_SRC
+
+** window-numbering
+
+Numbered window shortcuts for Emacs
+Enable window-numbering-mode and use M-1 through M-0 to navigate.
+
+The defun *window-numbering-install-mode-line* set below is to make
+window-numbering work together with spaceline, overriding its own modeline
+display function.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package window-numbering
+    :init   (window-numbering-mode)
+    :config
+    (defun window-numbering-install-mode-line (&optional position)
+      "Do nothing."))
+#+END_SRC
+
+** which-key
+Displays the key bindings following your currently entered incomplete command (a
+prefix) in a popup.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :init (which-key-mode)
+    :config (setq which-key-idle-delay 0.5
+                  which-key-key-replacement-alist
+                  '(("<\\([[:alnum:]-]+\\)>" . "\\1")
+                    ("up"                  . "↑")
+                    ("right"               . "→")
+                    ("down"                . "↓")
+                    ("left"                . "←")
+                    ("DEL"                 . "⌫")
+                    ("deletechar"          . "⌦")
+                    ("RET"                 . "⏎"))))
+#+END_SRC
+
+* Programming
+** indentation
+
+- [[https://github.com/Malabarba/aggressive-indent-mode][agressive-indent-mode]] keeps the code always indented.
+- [[https://github.com/DarthFennec/highlight-indent-guides][highligh-indent-guides]] minor mode to highlight indentation. I prefer it over
+  [[https://github.com/zk-phi/indent-guide][indent-guide]] (too slow when I tested it)
+
+#+BEGIN_SRC emacs-lisp
+  (use-package aggressive-indent
+    :demand t
+    :config
+    (global-aggressive-indent-mode 1)
+    (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+    )
+
+  ;; Leaving disabled for now. It does
+  (use-package highlight-indent-guides
+    :disabled t
+    :config
+    (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+    (setq highlight-indent-guides-method 'column)
+    ;;(set-face-background 'highlight-indent-guides-odd-face "#3f3f39")
+    ;;(set-face-background 'highlight-indent-guides-even-face "#32322d")
+    )
+#+END_SRC
+
+** parenthesis and delimiters
+
+- [[https://github.com/Fuco1/smartparens][smartparens]] is a minor mode that deals with parens pairs and tries to be smart
+  about it. There are good tips [[https://ebzzry.github.io/emacs-pairs.html][here]].
+
+- [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] puts different colours on parenthesis depending on their depth.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package smartparens-config
+      :ensure smartparens
+      :config
+        (show-smartparens-global-mode t))
+
+  (add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+  (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
+  (use-package rainbow-delimiters
+    :demand t
+    :config
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+#+END_SRC
+
+** ascii-doc
+
+[[http://www.methods.co.nz/asciidoc/][AsciiDoc]] is a text document format for writing short documents, articles, books
+and UNIX man pages. AsciiDoc files can be translated to HTML and DocBook
+markups.
+
+[[https://github.com/sensorflo/adoc-mode][adoc-mode]] is an Emacs major mode for editing AsciiDoc files. It emphasizes on
+the idea that the document is highlighted so it pretty much looks like the final
+output. What must be bold is bold, what must be italic is italic etc. Meta
+characters are naturally still visible, but in a faint way, so they can be
+easily ignored.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package adoc-mode
+    :config
+    (autoload 'adoc-mode "adoc-mode" nil t))
+#+END_SRC
+
+** jinja2
+
+#+BEGIN_SRC emacs-lisp
+  (use-package jinja2-mode
+    :mode "\\.j2\\'")
+#+END_SRC
+
+** json-mode
+
+Installs json-mode and make its reformat keybinding match the global default.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package json-mode
+    :commands json-mode
+    :config
+    (bind-keys :map json-mode-map
+               ("C-c <tab>" . json-mode-beautify)))
+#+END_SRC
+
+** markdown
+
+#+BEGIN_SRC emacs-lisp
+  (use-package markdown-mode)
+#+END_SRC
+
+** slime
+
+#+BEGIN_SRC emacs-lisp
+  (use-package slime
+    :config
+    (setq inferior-lisp-program "sbcl")
+    (load (expand-file-name "~/quicklisp/slime-helper.el")))
+
+  (use-package elisp-slime-nav
+    :after slime
+    :config
+    (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
+      (add-hook hook 'turn-on-elisp-slime-nav-mode)))
+#+END_SRC
+
+** yaml
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yaml-mode)
+#+END_SRC
+
+* Devops
+** eshell
+
+[[https://github.com/dakrone/eos/blob/master/eos-shell.org][source]]
+
+My frustration with shells makes me enjoy Emacs Shell, but there are some
+significant differences to address. To this end, I [[http://www.howardism.org/Technical/Emacs/eshell-fun.html][documented most features]].
+
+The ~keychain-environmet~ is to be used together with [[http://www.funtoo.org/Keychain][keychain]]. It loads the
+file "$HOME/.keychain/$HOSTNAME-sh" and parses it for the SSH_AUTH_SOCK and
+SSH_AUTH_PID variables.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package keychain-environment
+    :config
+    (keychain-refresh-environment))
+
+  (setenv "PAGER" "cat")
+  (setq eshell-scroll-to-bottom-on-input t)
+
+  ;; Define a keybinding to get to your eshell quickly.
+  (global-set-key (kbd "C-c e") 'eshell)
+
+  ;; Visual commands are commands which require a proper terminal.
+  ;; eshell will run them in a term buffer when you invoke them.
+  (setq eshell-visual-commands
+        '("less" "tmux" "htop" "top" "bash" "zsh" "fish"))
+  (setq eshell-visual-subcommands
+        '(("git" "log" "l" "diff" "show")))
+
+  (setq eshell-cmpl-cycle-completions t)  ;TAB for suggestion
+
+  (add-hook 'eshell-mode-hook (lambda ()
+                                (setq-local show-trailing-whitespace nil)
+                                (semantic-mode -1)
+                                (hl-line-mode -1)
+                                (global-hl-line-mode -1)))
+
+  ;; Define a pretty prompt.
+  (use-package eshell-git-prompt
+    :config
+    (eshell-git-prompt-use-theme 'powerline))
+
+  ;; Like Plan-9 shell
+  (use-package em-smart
+    :ensure nil
+    :init
+    (add-hook 'eshell-mode-hook 'eshell-smart-initialize)
+    :config
+    (setq eshell-where-to-jump 'begin
+          eshell-review-quick-commands nil
+          eshell-smart-space-goes-to-end t))
+#+END_SRC
+
+*** eshell history with counsel
+
+Navigate eshell history using counsel. Keybinding to `C-c C-l` - [[http://informatica.boccaperta.com/m-x-emacs-history-di-eshell-con-counsel/][Boccaperta]]
+
+FIXME: There's a bug on Eshell that forces the key-binding to be include using
+the `add-hook` below (not nice!). As soon as the bug is fixed, add the
+key-binding using `bind` from use-package:
+
+:bind (:map eshell-mode-map
+            ("C-c C-l" . mu-counsel-esh-history))
+
+ #+BEGIN_SRC emacs-lisp
+   (defun mu-counsel-esh-history ()
+         "Browse Eshell history."
+         (interactive)
+         (setq ivy-completion-beg (point))
+         (setq ivy-completion-end (point))
+         (ivy-read "Symbol name: "
+                   (delete-dups
+                    (ring-elements eshell-history-ring))
+                   :action #'ivy-completion-in-region-action))
+
+   (add-hook 'eshell-mode-hook
+             #'(lambda ()
+                 (bind-key "C-c C-l" #'mu-counsel-esh-history
+                           eshell-mode-map)))
+ #+END_SRC
+
+** tramp
+
+#+BEGIN_SRC emacs-lisp
+  (setq tramp-default-method "ssh")
+#+END_SRC
+
+** ansible
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ansible
+    :init
+    (add-hook 'yaml-mode-hook '(lambda () (ansible 1)))
+    )
+
+  (use-package ansible-doc
+    :after ansible
+    :init
+    (add-hook 'yaml-mode-hook #'ansible-doc-mode)
+    )
+#+END_SRC
+
+** puppet
+
+#+BEGIN_SRC emacs-lisp
+  (use-package puppet-mode)
+#+END_SRC
+
+** vagrant
+
+#+BEGIN_SRC emacs-lisp
+  (use-package vagrant)
+
+  (use-package vagrant-tramp
+    :after vagrant
+    :config
+    (eval-after-load 'tramp '(vagrant-tramp-enable)))
 #+END_SRC
 
 * Appearance
