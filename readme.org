@@ -587,7 +587,7 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
    "SPC" '(avy-goto-word-or-subword-1 :which-key "go to char")
 
    "bb" 'switch-to-buffer
-   "bd" 'kill-buffer
+   "bd" 'kill-this-buffer
    "by" 'copy-whole-buffer
    "cy" 'clipboard-kill-ring-save
    "cp" 'clipboard-yank
