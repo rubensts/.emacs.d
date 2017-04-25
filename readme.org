@@ -42,21 +42,21 @@ This is a list of applications that need to be installed previously in order to
 enjoy all the goodies of this configuration. Of course, you can install only the
 ones you will really use and/or adapt it to the ones you prefer.
 
-- rg ("ripgrep") or  Ag (“The Silver Searcher”)
-- git
-- notmuch (also a tool to fetch mail like mbsync or OfflineImap)
-- GnuPG
-- LaTeX and Pygments to PDF export with syntax highlighting
-- MuPDF for DocView, poppler for pdf-tools
-- pandoc for ox-pandoc
-- pass
+- [[https://github.com/BurntSushi/ripgrep][ripgrep]] for fast searching
+- [[https://git-scm.com/][git]] for version control, but if you are here you already know what is it ;)
+- [[https://notmuchmail.org/][notmuch]] for email (also a tool to fetch mail like [[http://isync.sourceforge.net/][mbsync]] or [[http://www.offlineimap.org/][OfflineImap]])
+- [[https://www.gnupg.org/][GnuPG]] for security, always
+- [[https://www.passwordstore.org/][pass]] to manage your passwords
+- [[https://www.latex-project.org/][LaTeX]] and [[http://pygments.org/][Pygments]] to PDF export with syntax highlighting
+- [[https://mupdf.com/][MuPDF]] for DocView, [[https://poppler.freedesktop.org/][poppler]] for pdf-tools
+- [[http://pandoc.org/][pandoc]] for [[https://github.com/kawabata/ox-pandoc][ox-pandoc]]
 - [[http://proselint.com/][proselint]] a liter for prose
-- Zeal
+- [[https://zealdocs.org/][Zeal]] (Linux) or [[https://kapeli.com/dash][Dash]] (macOS) for browsing software documentation
   After installing Zeal, you need to download docsets. Go to
   File->Options->Docsets, select the ones you want, and click the Download
   button.
-- ImageMagick or GraphicsMagick
-- gzip
+- [[https://www.imagemagick.org/script/index.php][ImageMagick]] or [[http://www.graphicsmagick.org/][GraphicsMagick]]
+- [[http://www.gzip.org/][gzip]]
 
 ** Source of Ideas
 
@@ -165,7 +165,7 @@ bother tracking it:
 git update-index --assume-unchanged init.el
 #+END_EXAMPLE
 
-* Packages Setup
+* Initial Setup
 
 To automatized package intallation I've started using ~use-package~, which gives a
 concise and powerful way to organize Emacs configuration avoiding the terrible
@@ -233,11 +233,27 @@ issues.
 ** Initialization
 
 #+BEGIN_SRC emacs-lisp
-  (when (version< emacs-version "25")
-    (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
+(when (version< emacs-version "25")
+  (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
 
-  ;; Disables calling default.el (default settings) after init.el
-  (setq inhibit-default-init t)
+;; Disables calling default.el (default settings) after init.el
+(setq inhibit-default-init t)
+#+END_SRC
+
+** Garbage collector
+
+Optimizing the Emacs's garbage collector only for when the minibuffer is opened.
+I'm using the block below after reading about it [[http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/][here]].
+
+#+BEGIN_SRC emacs-lisp
+(defun my-minibuffer-setup-hook ()
+  (setq gc-cons-threshold most-positive-fixnum))
+
+(defun my-minibuffer-exit-hook ()
+  (setq gc-cons-threshold 800000))
+
+(add-hook 'minibuffer-setup-hook #'my-minibuffer-setup-hook)
+(add-hook 'minibuffer-exit-hook #'my-minibuffer-exit-hook)
 #+END_SRC
 
 ** Environment fixup
@@ -546,6 +562,9 @@ kill. Very good tip taken from [[http://pragmaticemacs.com/emacs/dont-kill-buffe
 * Main packages
 ** evil
 
+Why use vim modal editing on Emacs?
+
+Simple: the editing paradigm of Vim is the best way, by far, of editing text. Emacs is the best for everything else ;)
 Evil configuration taken from https://ilikewhenit.works/blog/6
 
 #+BEGIN_SRC emacs-lisp
@@ -553,12 +572,10 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
   :demand t
   :config
   (evil-mode 1)
-
   (with-eval-after-load 'evil-maps
     ;;(define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd "RET") nil)
-    (define-key evil-motion-state-map (kbd "TAB") nil))
-  )
+    (define-key evil-motion-state-map (kbd "TAB") nil)))
 
 (use-package evil-surround
   :after evil
@@ -570,51 +587,28 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
   :config
   (evil-indent-plus-default-bindings))
 
-(use-package general
-  :demand t
+(use-package evil-commentary
   :after evil
   :config
-  (general-define-key
-   :states '(normal visual insert emacs)
-   :prefix "SPC"
-   :non-normal-prefix "C-SPC"
+  (evil-commentary-mode))
 
-   ;; simple command
-   ;;"'"   '(iterm-focus :which-key "iterm")
-   ;;"?"   '(iterm-goto-filedir-or-home :which-key "iterm - goto dir")
-   ;;"/"   'counsel-ag
-   "TAB" '(switch-to-other-buffer :which-key "prev buffer")
-   "SPC" '(avy-goto-word-or-subword-1 :which-key "go to char")
+(use-package evil-snipe
+  :after evil
+  :demand t
+  :init
+  (setq evil-snipe-scope 'whole-buffer
+        evil-snipe-enable-highlight t
+        evil-snipe-enable-incremental-highlight t
+        evil-snipe-auto-disable-substitute t
+        evil-snipe-show-prompt nil
+        evil-snipe-smart-case t)
+  :config
+  (progn
+    (evil-snipe-override-mode 1)
+    (evil-snipe-mode 1)))
 
-   "bb" 'switch-to-buffer
-   "bd" 'kill-this-buffer
-   "by" 'copy-whole-buffer
-   "cy" 'clipboard-kill-ring-save
-   "cp" 'clipboard-yank
-   "ff" 'find-file
-   "fs" 'save-buffer
-   "gs" 'magit-status
-   "hs" 'split-window-horizontally
-   "iu" 'insert-char
-   "lf" 'load-file
-   "ne" 'flycheck-next-error
-   "pe" 'flycheck-previous-error
-   "rm" 'notmuch
-   "sm" 'message-send-and-exit
-   "si" 'whitespace-mode
-   "tn" 'linum-mode
-   "w1" 'delete-other-windows
-   "w2" 'split-below-and-move
-   "w3" 'split-right-and-move
-   "wk" 'windmove-left
-   "wj" 'windmove-right
-   "qq" 'save-buffers-kill-emacs
-   "zp" 'zeal-at-point
-
-   ;; Applications
-   "a" '(:ignore t :which-key "Applications")
-   "ar" 'ranger
-   "ad" 'dired))
+(use-package evil-anzu
+  :after evil)
 #+END_SRC
 
 ** org
@@ -1669,6 +1663,65 @@ prefix) in a popup.
                     ("RET"                 . "⏎"))))
 #+END_SRC
 
+* Keybindings
+
+#+BEGIN_SRC emacs-lisp
+(use-package general
+  :demand t
+  :after evil
+  :config
+  (general-define-key
+   :states '(normal visual insert emacs)
+   :prefix "SPC"
+   :non-normal-prefix "C-SPC"
+
+   ;; simple command
+   ;;"'"   '(iterm-focus :which-key "iterm")
+   ;;"?"   '(iterm-goto-filedir-or-home :which-key "iterm - goto dir")
+   ;;"/"   'counsel-ag
+   "TAB" '(switch-to-other-buffer :which-key "prev buffer")
+   "SPC" '(avy-goto-word-or-subword-1 :which-key "go to char")
+
+   "bb" 'switch-to-buffer
+   "bd" 'kill-this-buffer
+   "by" 'copy-whole-buffer
+   "cy" 'clipboard-kill-ring-save
+   ;;"cp" 'clipboard-yank
+   "ff" 'find-file
+   "fs" 'save-buffer
+   "gs" 'magit-status
+   "hs" 'split-window-horizontally
+   "iu" 'insert-char
+   "lf" 'load-file
+   "ne" 'flycheck-next-error
+   "pe" 'flycheck-previous-error
+   "rm" 'notmuch
+   "sm" 'message-send-and-exit
+   "si" 'whitespace-mode
+   "tn" 'linum-mode
+   "w1" 'delete-other-windows
+   "w2" 'split-below-and-move
+   "w3" 'split-right-and-move
+   "wk" 'windmove-left
+   "wj" 'windmove-right
+   "qq" 'save-buffers-kill-emacs
+   "zp" 'zeal-at-point
+
+   ;; evil-nerd-commenter
+   ;; "ci" 'evilnc-comment-or-uncomment-lines
+   ;; "cl" 'evilnc-quick-comment-or-uncomment-to-the-line
+   ;; "cc" 'evilnc-copy-and-comment-lines
+   ;; "cp" 'evilnc-comment-or-uncomment-paragraphs
+   ;; "cr" 'comment-or-uncomment-region
+   ;; "cv" 'evilnc-toggle-invert-comment-line-by-line
+   ;; "."  'evilnc-copy-and-comment-operator
+
+   ;; Applications
+   "a" '(:ignore t :which-key "Applications")
+   "ar" 'ranger
+   "ad" 'dired))
+#+END_SRC
+
 * Programming
 ** indentation
 
@@ -1715,6 +1768,29 @@ prefix) in a popup.
   :demand t
   :config
   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+#+END_SRC
+
+** searching documentation
+
+These are 2 options for searching software documentation from within Emacs: [[https://zealdocs.org/][Zeal]]
+(if you are on Linux) or [[https://kapeli.com/dash][Dash]] (if on macOS).
+
+*Remember*: Install the docsets after installing Zeal or Dash
+
+#+BEGIN_SRC emacs-lisp
+(cond ((system-is-linux)
+       (use-package zeal-at-point
+         :config
+         (add-to-list 'zeal-at-point-mode-alist '(python-mode . "python"))
+         (add-to-list 'zeal-at-point-mode-alist '(sql-mode . "postgresql"))
+         ))
+
+      ((system-is-mac)
+        (use-package dash-at-point
+         :config
+         (add-to-list 'zeal-at-point-mode-alist '(python-mode . "python"))
+         (add-to-list 'zeal-at-point-mode-alist '(sql-mode . "postgresql"))
+       )))
 #+END_SRC
 
 ** ascii-doc
