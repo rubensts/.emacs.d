@@ -575,7 +575,26 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
   (with-eval-after-load 'evil-maps
     ;;(define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd "RET") nil)
-    (define-key evil-motion-state-map (kbd "TAB") nil)))
+    (define-key evil-motion-state-map (kbd "TAB") nil))
+
+  (validate-setq evil-emacs-state-cursor '("red" box)
+                 evil-motion-state-cursor '("orange" box)
+                 evil-normal-state-cursor '("green" box)
+                 evil-visual-state-cursor '("orange" box)
+                 evil-insert-state-cursor '("red" bar)
+                 evil-replace-state-cursor '("red" bar)
+                 evil-operator-state-cursor '("red" hollow))
+
+  (add-hook 'after-init-hook
+            (lambda ()
+              (evil-put-property 'evil-state-properties 'normal   :tag " NORMAL ")
+              (evil-put-property 'evil-state-properties 'insert   :tag " INSERT ")
+              (evil-put-property 'evil-state-properties 'visual   :tag " VISUAL ")
+              (evil-put-property 'evil-state-properties 'motion   :tag " MOTION ")
+              (evil-put-property 'evil-state-properties 'emacs    :tag " EMACS ")
+              (evil-put-property 'evil-state-properties 'replace  :tag " REPLACE ")
+              (evil-put-property 'evil-state-properties 'operator :tag " OPERATOR ")))
+  )
 
 (use-package evil-surround
   :after evil
@@ -608,6 +627,14 @@ Evil configuration taken from https://ilikewhenit.works/blog/6
     (evil-snipe-mode 1)))
 
 (use-package evil-anzu
+  :after evil)
+
+(use-package evil-matchit
+  :after evil
+  :config
+  (global-evil-matchit-mode 1))
+
+(use-package evil-numbers
   :after evil)
 #+END_SRC
 
