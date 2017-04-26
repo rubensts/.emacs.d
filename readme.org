@@ -813,10 +813,10 @@ try Emacs, then they are hooked ;)
 *** ox.el
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ox
-    :ensure org-plus-contrib
-    :config
-    (validate-setq org-export-with-smart-quotes t))
+(use-package ox
+  :ensure org-plus-contrib
+  :config
+  (validate-setq org-export-with-smart-quotes t))
 #+END_SRC
 
 *** ox-pandoc
@@ -832,6 +832,7 @@ with org-mode http://informatica.boccaperta.com/m-x-emacs-ox-pandoc/
 #+BEGIN_SRC emacs-lisp
   (use-package ox-pandoc
     :after org-plus-contrib
+    :demand t
     :config
     (validate-setq org-pandoc-options '((standalone . t))            ; default options for all output formats
                    org-pandoc-options-for-docx '((standalone . nil)) ; cancel above settings only for 'docx' format
