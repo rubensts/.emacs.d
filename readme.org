@@ -88,7 +88,7 @@ For installing Emacs on Mac, check these:
 - [[http://emacs.stackexchange.com/questions/271/what-is-the-difference-between-aquamacs-and-other-mac-versions-of-emacs][Stackexchange - Difference between Emacs versions on mac]]
 - [[http://www.reddit.com/r/emacs/comments/195163/hey_mac_users/][reddit - emacs-mac-port]]
 
-** How it works
+* How it works
 
 The file =~/.emacs.d/init.el= is one of the first standard init files read by
 Emacs in order to load all its configuration. The idea here is to create
@@ -141,7 +141,7 @@ saved.
   (add-hook 'after-save-hook 'tangle-init)
 #+END_SRC
 
-*** How to generate the first init.el file
+** Generate the first init.el file
 
 You can notice that there isn't an =init.el= file present in this
 repository. To generate it the first time you just have to run the
@@ -829,24 +829,27 @@ http://www.rousette.org.uk/blog/archives/org-mode-and-pandoc/ Keeping a lab book
 with org-mode http://informatica.boccaperta.com/m-x-emacs-ox-pandoc/
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ox-pandoc
-    :after org-plus-contrib
-    :demand t
-    :config
-    (validate-setq org-pandoc-options '((standalone . t))            ; default options for all output formats
-                   org-pandoc-options-for-docx '((standalone . nil)) ; cancel above settings only for 'docx' format
-                   org-pandoc-options-for-beamer-pdf                 ; special settings for beamer-pdf
-                   '((latex-engine . "lualatex"))
-                   org-pandoc-options-for-latex-pdf                  ; and for latex-pdf exporters
-                   '((latex-engine . "lualatex"))
+(use-package ox-pandoc
+  :after org-plus-contrib
+  :demand t
+  :config
+  (validate-setq org-pandoc-options '((standalone . t))            ; default options for all output formats
+                 org-pandoc-options-for-docx '((standalone . nil)) ; cancel above settings only for 'docx' format
 
-                   ;; Use external css for html5
-                   ;; (let ((stylesheet (expand-file-name
-                   ;;                    (locate-user-emacs-file "etc/pandoc.css"))))
-                   ;;   (setq org-pandoc-options-for-html5
-                   ;;         `((css . ,(concat "file://" stylesheet)))))
-                   )
-    )
+                 org-pandoc-options-for-beamer-pdf '((latex-engine . "lualatex"))
+                 org-pandoc-options-for-latex-pdf  '((latex-engine . "lualatex"))
+                 ;;org-pandoc-options-for-latex-pdf '((latex-engine . "xelatex")
+                 ;;                                   (template . "~/.pandoc/templates/memoir2.latex" ))
+                 ;;org-pandoc-options-for-latex '((latex-engine . "xelatex")
+                 ;;                               (template . "~/.pandoc/templates/memoir2.latex" ))
+
+                 ;; Use external css for html5
+                 ;; (let ((stylesheet (expand-file-name
+                 ;;                    (locate-user-emacs-file "etc/pandoc.css"))))
+                 ;;   (setq org-pandoc-options-for-html5
+                 ;;         `((css . ,(concat "file://" stylesheet)))))
+                 )
+  )
 #+END_SRC
 
 *** org-babel
@@ -1691,6 +1694,7 @@ prefix) in a popup.
 #+END_SRC
 
 * Keybindings
+I'm start managing my keybindins through General.
 
 #+BEGIN_SRC emacs-lisp
 (use-package general
@@ -1706,33 +1710,55 @@ prefix) in a popup.
    ;;"'"   '(iterm-focus :which-key "iterm")
    ;;"?"   '(iterm-goto-filedir-or-home :which-key "iterm - goto dir")
    ;;"/"   'counsel-ag
-   "TAB" '(switch-to-other-buffer :which-key "prev buffer")
    "SPC" '(avy-goto-word-or-subword-1 :which-key "go to char")
+   "iu" 'insert-char
+   "ne" 'flycheck-next-error
+   "pe" 'flycheck-previous-error
+   "qq" 'save-buffers-kill-emacs
+   "zp" 'zeal-at-point
+   "cy" 'clipboard-kill-ring-save
+   ;;"cp" 'clipboard-yank
 
+   ;; buffers
+   "TAB" '(switch-to-other-buffer :which-key "prev buffer")
+   "b" '(:ignore t :which-key "Buffers")
    "bb" 'switch-to-buffer
    "bd" 'kill-this-buffer
    "by" 'copy-whole-buffer
-   "cy" 'clipboard-kill-ring-save
-   ;;"cp" 'clipboard-yank
-   "ff" 'find-file
-   "fs" 'save-buffer
-   "gs" 'magit-status
-   "hs" 'split-window-horizontally
-   "iu" 'insert-char
-   "lf" 'load-file
-   "ne" 'flycheck-next-error
-   "pe" 'flycheck-previous-error
-   "rm" 'notmuch
-   "sm" 'message-send-and-exit
-   "si" 'whitespace-mode
-   "tn" 'linum-mode
+
+   ;; windows
    "w1" 'delete-other-windows
    "w2" 'split-below-and-move
    "w3" 'split-right-and-move
    "wk" 'windmove-left
    "wj" 'windmove-right
-   "qq" 'save-buffers-kill-emacs
-   "zp" 'zeal-at-point
+
+   ;; files
+   "f" '(:ignore t :which-key "Files")
+   "ff" 'find-file
+   "fl" 'load-file
+   "fs" 'save-buffer
+
+   ;; modes
+   "m" '(:ignore t :which-key "Modes")
+   "ml" 'linum-mode
+   "mw" 'whitespace-mode
+
+   ;; applications
+   "a" '(:ignore t :which-key "Applications")
+   "ad" 'dired
+   "am" 'notmuch
+
+   ;; git
+   "g" '(:ignore t :which-key "GIT")
+   "gs" 'magit-status
+
+   ;; spelling
+   "s" '(:ignore t :which-key "Spelling")
+   "sd" 'switch-dictionary
+   "sn" 'flyspell-goto-next-error
+   "sp" 'flyspell-popup-correct
+   "sw" 'flyspell-auto-correct-word
 
    ;; evil-nerd-commenter
    ;; "ci" 'evilnc-comment-or-uncomment-lines
@@ -1742,11 +1768,267 @@ prefix) in a popup.
    ;; "cr" 'comment-or-uncomment-region
    ;; "cv" 'evilnc-toggle-invert-comment-line-by-line
    ;; "."  'evilnc-copy-and-comment-operator
+   ))
+#+END_SRC
 
-   ;; Applications
-   "a" '(:ignore t :which-key "Applications")
-   "ar" 'ranger
-   "ad" 'dired))
+* Tools
+** IRC (Internet Relay Chat)
+IRC is a great way to hang out with other Emacs geeks. I use ERC for that and
+the configuration here is adapted from [[https://github.com/bbatsov/prelude/blob/master/modules/prelude-erc.el][Prelude]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package erc
+  :config
+  (progn
+    (erc-track-mode t)                      ; track activities on chats
+    (erc-truncate-mode +1)                  ; truncate long irc buffers
+    (erc-spelling-mode 1)                   ; enable spell checking
+
+    (setq erc-interpret-mirc-color t        ; interpret mIRC-style color commands in IRC chats
+          erc-kill-buffer-on-part t         ; kill buffer for channels after /part
+          erc-kill-queries-on-quit t        ; kill buffer for private queries after quitting the server
+          erc-kill-server-buffer-on-quit t  ; kill buffer for server messages after quitting the server
+          erc-query-display 'buffer         ; open query buffers in the current window
+          erc-save-buffer-on-part t         ; logging
+
+          ;; autoaway setup
+          erc-auto-discard-away t
+          erc-autoaway-idle-seconds 600
+          erc-autoaway-use-emacs-idle t
+
+          erc-server-coding-system '(utf-8 . utf-8) ; utf-8 always and forever
+
+          erc-track-exclude-types '("JOIN" "NICK" "PART" "QUIT" "MODE"
+                                    "324" "329" "332" "333" "353" "477") ; exclude these from tracking
+          erc-hide-list '("JOIN" "PART" "QUIT" "NICK")  ; doesn't show any of these
+          )
+
+  ;; logging
+  ;; (setq erc-log-channels-directory "~/.erc/logs/")
+
+  ;; (if (not (file-exists-p erc-log-channels-directory))
+  ;;     (mkdir erc-log-channels-directory t))
+
+  (defvar erc-notify-nick-alist nil
+    "Alist of nicks and the last time they tried to trigger a
+  notification")
+
+  (defvar erc-notify-timeout 10
+    "Number of seconds that must elapse between notifications from
+  the same person.")
+
+  (defun erc-notify-allowed-p (nick &optional delay)
+    "Return non-nil if a notification should be made for NICK.
+  If DELAY is specified, it will be the minimum time in seconds
+  that can occur between two notifications.  The default is
+  `erc-notify-timeout'."
+    (unless delay (setq delay erc-notify-timeout))
+    (let ((cur-time (time-to-seconds (current-time)))
+          (cur-assoc (assoc nick erc-notify-nick-alist))
+          (last-time nil))
+      (if cur-assoc
+          (progn
+            (setq last-time (cdr cur-assoc))
+            (setcdr cur-assoc cur-time)
+            (> (abs (- cur-time last-time)) delay))
+        (push (cons nick cur-time) erc-notify-nick-alist)
+        t)))
+
+  (defun start-irc ()
+    "Connect to IRC."
+    (interactive)
+    (when (y-or-n-p "Do you want to start IRC? ")
+      (erc :server "irc.freenode.net"
+           :port 6667
+           :nick rubens)))
+
+  ;; (defun erc-start-or-switch ()
+  ;;   "Connect to ERC, or switch to last active buffer"
+  ;;   (interactive)
+  ;;   (if (get-buffer "irc.freenode.net:6667")  ; ERC already active?
+  ;;       (erc-track-switch-buffer 1)           ; yes: switch to last active
+
+  ;;     (when (y-or-n-p "Start ERC? ")          ; no: maybe start ERC
+  ;;       (erc :server "irc.freenode.net"
+  ;;            :port 6667
+  ;;            :nick "rsouza"))))
+
+  (defun filter-server-buffers ()
+    (delq nil
+          (mapcar
+           (lambda (x) (and (erc-server-buffer-p x) x))
+           (buffer-list))))
+
+  (defun stop-irc ()
+    "Disconnects from all irc servers"
+    (interactive)
+    (dolist (buffer (filter-server-buffers))
+      (message "Server buffer: %s" (buffer-name buffer))
+      (with-current-buffer buffer
+        (erc-quit-server "Asta la vista"))))
+
+  (setq erc-autojoin-channels-alist '(("freenode.net"
+                                       "#org-mode"
+                                       "#hacklabto"
+                                       "#emacs"
+                                       "#itpug-soci")))
+
+  (require 'erc-log)
+  (require 'erc-notify)
+  (require 'erc-spelling)
+  (require 'erc-autoaway)
+  ))
+#+END_SRC
+
+** Spell and grammar checking
+
+Emacs can help you writing better...I know, I know, this is relative, but the
+tools here will try to help you with the language, at least ;)
+
+Reading these articles will better explain the idea: [[https://joelkuiper.eu/spellcheck_emacs][Joel Kuiper's spellcheck emacs]]
+and [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might's weasel words]].
+
+*** flyspell
+
+It activates Spell Checking by default. Also uses hunspell instead of ispell as
+corrector.
+
+| *Key binding*                | *Command* | *Result*                        |
+|----------------------------+---------+-------------------------------|
+| flyspell-popup-correct     | =C-;=     | spell-check the word on point |
+| flyspell-goto-next-error   | =C-,=     | got to the next error         |
+| flyspell-auto-correct-word | =C-M-i=   | auto-correct the word         |
+
+**** hunspell setup
+
+1. Install Hunspell from your distribution package manager or use [[http://hunspell.sourceforge.net/][Hunspell page]]
+2. Download the language dictionary extension from [[http://extensions.libreoffice.org/extension-center][Libreoffice]] or  [[http://extensions.openoffice.org/en/project/english-dictionaries-apache-openoffice][Openoffice]]
+3. It will download the file ~<language>.oxt~. Rename it to ~<language>.zip~ and unzip
+   it into a temporary folder.
+4. Copy the ~<language>.dic~ and ~<language>.aff~ files from there to a folder where you save
+   dictionary files, usually to =~/usr/local/share/hunspell/= or =~/usr/share/hunspell/=
+5. Add that path to shell env variable ~DICPATH~: =setenv DICPATH $MYLOCAL/share/hunspell=
+6. Restart emacs so that when hunspell is run by ispell/flyspell, that env variable is effective.
+
+Hunspell will search for a dictionary called ~en_US~ in the path specified by =$DICPATH=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package flyspell
+  :demand t
+  :config
+  (progn
+    (validate-setq ispell-program-name "hunspell"
+                   ispell-dictionary "en_GB"
+                   ispell-dictionary-alist '(("en_GB"
+                                              "[[:alpha:]]"
+                                              "[^[:alpha:]]"
+                                              "[']" nil ("-d" "en_GB") nil utf-8)
+                                             '("it_IT"
+                                               "[[:alpha:]]"
+                                               "[^[:alpha:]]"
+                                               "[']" nil ("-d" "it_IT") nil utf-8)
+                                             )))
+
+  (validate-setq flyspell-issue-welcome-flag nil      ; turn off flyspell welcome message
+                 flyspell-issue-message-flag nil)     ; turn off flyspell messages when checking words
+
+  (add-hook 'prog-mode-hook     'flyspell-prog-mode)  ; spell check in program comments
+  (add-hook 'org-mode-hook      'flyspell-mode)       ; spell check in md/plain text/org-mode
+  (add-hook 'text-mode-hook     'flyspell-mode)
+  (add-hook 'markdown-mode-hook 'flyspell-mode))
+#+END_SRC
+
+**** Switch dictionaries
+
+Switch between the most used dictionaries in my case.
+
+#+BEGIN_SRC emacs-lisp
+(defun switch-dictionary ()
+  (interactive)
+  (let* ((dic ispell-current-dictionary)
+         (change (if (string= dic "en_GB") "it_IT" "en_GB")))
+    (ispell-change-dictionary change)
+    (message "Dictionary switched from %s to %s" dic change)))
+
+(global-set-key (kbd "<f8>") 'switch-dictionary)
+#+END_SRC
+
+**** flyspell-lazy
+
+Flyspell usually slows down the responsiveness when writing texts. [[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]]
+is used to improve *Flyspell* responsiveness using idle timers.
+
+#+BEGIN_SRC emacs-lisp
+(use-package flyspell-lazy
+  :demand t
+  :after flyspell
+  :config
+  (flyspell-lazy-mode 1))
+#+END_SRC
+
+**** flyspell-popup
+
+[[https://github.com/xuchunyang/flyspell-popup][Flyspell-popup]] is used to correct words with Flyspell in popup menus.
+
+#+BEGIN_SRC emacs-lisp
+(use-package flyspell-popup
+  :after flyspell
+  :bind (:map flyspell-mode-map
+              ("C-;" . flyspell-popup-correct)))
+#+END_SRC
+
+*** languagetool
+
+[[https://www.languagetool.org/][LanguageTool]] is an Open Source proof­reading program for English, French,
+German, Polish, and more than 20 other languages.
+
+#+BEGIN_SRC emacs-lisp
+(use-package langtool
+  :bind (("C-x 4 w" . langtool-check)                   ; check buffer and show warnings
+         ("C-x 4 W" . langtool-check-done)              ; finish checking and remove markers
+         ("C-x 4 l" . langtool-switch-default-language) ; swicth languages
+         ("C-x 4 n" . langtool-goto-next-error)         ; go to the next error
+         ("C-x 4 4" . langtool-show-message-at-point)   ; show the warning at point
+         ("C-x 4 c" . langtool-correct-buffer)          ; correct markers
+         )
+  :config
+  (validate-setq langtool-language-tool-jar "/usr/share/java/languagetool/languagetool-commandline.jar"
+                 langtool-java-bin "/usr/bin/java"
+                 langtool-mother-tongue "en")
+
+  (setq langtool-disabled-rules '("WHITESPACE_RULE"
+                                  "EN_UNPAIRED_BRACKETS"
+                                  "COMMA_PARENTHESIS_WHITESPACE"
+                                  "EN_QUOTES"))
+
+  ;; show suggestions in a popup
+  (defun langtool-autoshow-detail-popup (overlays)
+    (when (require 'popup nil t)
+      ;; Do not interrupt current popup
+      (unless (or popup-instances
+                  ;; suppress popup after type `C-g` .
+                  (memq last-command '(keyboard-quit)))
+        (let ((msg (langtool-details-error-message overlays)))
+          (popup-tip msg)))))
+
+  (validate-setq langtool-autoshow-message-function
+                 'langtool-autoshow-detail-popup))
+#+END_SRC
+
+*** writegood
+
+[[https://github.com/bnbeckwith/writegood-mode][Writegood]] is a minor mode to aid in finding common writing problems. It
+highlights text based on a set of weasel-words, passive-voice and duplicate
+words. [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might’s weaselwords scripts]] inspired this mode.
+
+#+BEGIN_SRC emacs-lisp
+(use-package writegood-mode
+  :disabled t
+  :config
+  (progn
+    (add-hook 'org-mode-hook      'writegood-mode)
+    (add-hook 'text-mode-hook     'writegood-mode)
+    (add-hook 'markdown-mode-hook 'writegood-mode)))
 #+END_SRC
 
 * Programming
@@ -1878,11 +2160,31 @@ Installs json-mode and make its reformat keybinding match the global default.
     (add-hook hook 'turn-on-elisp-slime-nav-mode)))
 #+END_SRC
 
-** sql
+** SQL
+Emacs has SQLi mode buitin, which work pretty well to connect to databases. Here
+I am configuring it for PostgreSQL, of course.
 
 [[https://github.com/Trevoke/sqlup-mode.el][sqlup-mode]] is a minor mode to upcase SQL keyword and functions.
 
 #+BEGIN_SRC emacs-lisp
+;; Make SQLi default to PostgreSQL syntax highlighting
+;; https://blogs.gentoo.org/titanofold/2011/05/17/postgresql-syntax-highlighting-in-emacs/
+(eval-after-load "sql"
+  '(progn (sql-set-product 'postgres)))
+
+;; Set default config for login
+;; https://truongtx.me/2014/08/23/setup-emacs-as-an-sql-database-client/
+(setq sql-postgres-login-params
+      '((user :default "postgres")
+        (database :default "postgres")
+        (server :default "localhost")
+        (port :default 5432)))
+
+;; Truncate lines to better visualize many columns tables
+(add-hook 'sql-interactive-mode-hook
+          (lambda ()
+            (toggle-truncate-lines t)))
+
 (use-package sqlup-mode
   :bind (("C-c u" . sqlup-capitalize-keywords-in-region))
   :config
