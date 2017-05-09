@@ -1134,33 +1134,51 @@ allows you to jump between and revert them selectively.
 Load up the assorted dired extensions.
 
 #+BEGIN_SRC emacs-lisp
+(use-package dired
+  :ensure nil
+  :config
+  (validate-setq
+   dired-auto-revert-buffer t            ; revert buffers on revisiting
+   ;;global-auto-revert-non-file-buffers t ; auto refresh Dired
+   ;;auto-revert-verbose nil               ; but be quiet about it
+   dired-dwim-target t                   ; use other pane as target
+   dired-recursive-copies 'always        ; copy dirs recursively
+   dired-recursive-deletes 'top          ; ask before deleting dirs recursively
+   dired-listing-switches
+   "-lhaFG1v --group-directories-first"  ; add ls switches
+   dired-ls-F-marks-symlinks t           ; -F marks links with @
+
+   ;; dired-open-extensions                 ; open files with appropriate programs
+   ;; '(("pdf" . "evince")
+   ;;   ("mkv" . "vlc")
+   ;;   ("mp4" . "vlc")
+   ;;   ("avi" . "vlc"))
+)
+
+  (put 'dired-find-alternate-file 'disabled nil)        ; enable dired-find-alternate-file
+
+  (add-hook 'dired-mode-hook #'toggle-truncate-lines)   ; handle long file names
+  (add-hook 'dired-mode-hook 'auto-revert-mode))        ; auto refresh dired when file changes
+
 (use-package dired-x
-  :ensure nil)
+  :ensure nil
+  :bind ("C-x C-j" . dired-jump)
+  :config
+  (validate-setq
+   dired-clean-up-buffers-too t          ; kill buffer of files/dir that are deleted in dired
+   ))
 
 (use-package dired+
   :config
-  (setq diredp-hide-details-initially-flag t
-        diredp-hide-details-propagate-flag t)
+  (validate-setq
+   diredp-hide-details-initially-flag t
+   diredp-hide-details-propagate-flag t)
 
   (toggle-diredp-find-file-reuse-dir 1)        ; use single buffer for all dired navigation
   ;;(diredp-make-find-file-keys-reuse-dirs)
   )
 
 (use-package dired-open)
-
-;; Dired configuration
-(put 'dired-find-alternate-file 'disabled nil)
-(setq dired-clean-up-buffers-too t      ; kill buffer of files/dir that are deleted in dired
-      dired-recursive-copies 'always    ; always copy directories recursively
-      dired-recursive-deletes 'top      ; ask before recursively deleting a directory
-      dired-open-extensions             ; open files with appropriate programs
-      '(("pdf" . "evince")
-        ("mkv" . "vlc")
-        ("mp4" . "vlc")
-        ("avi" . "vlc")))
-
-(setq-default dired-listing-switches "-lhvA")  ; ls switches when dired gets list of files
-(add-hook 'dired-mode-hook 'auto-revert-mode)  ; auto refresh dired when file changes
 #+END_SRC
 
 ** easy-kill
