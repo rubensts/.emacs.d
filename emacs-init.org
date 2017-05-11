@@ -989,7 +989,6 @@ Simple library for asynchronous processing in Emacs
 (use-package async
   :demand t
   :config
-  (dired-async-mode t)
   (async-bytecomp-package-mode t))
 #+END_SRC
 
@@ -1127,58 +1126,6 @@ allows you to jump between and revert them selectively.
   (diff-hl-flydiff-mode)
   (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
-#+END_SRC
-
-** dired
-
-Load up the assorted dired extensions.
-
-#+BEGIN_SRC emacs-lisp
-(use-package dired
-  :ensure nil
-  :config
-  (validate-setq
-   dired-auto-revert-buffer t            ; revert buffers on revisiting
-   ;;global-auto-revert-non-file-buffers t ; auto refresh Dired
-   ;;auto-revert-verbose nil               ; but be quiet about it
-   dired-dwim-target t                   ; use other pane as target
-   dired-recursive-copies 'always        ; copy dirs recursively
-   dired-recursive-deletes 'top          ; ask before deleting dirs recursively
-   dired-listing-switches
-   "-lhaFG1v --group-directories-first"  ; add ls switches
-   dired-ls-F-marks-symlinks t           ; -F marks links with @
-
-   ;; dired-open-extensions                 ; open files with appropriate programs
-   ;; '(("pdf" . "evince")
-   ;;   ("mkv" . "vlc")
-   ;;   ("mp4" . "vlc")
-   ;;   ("avi" . "vlc"))
-)
-
-  (put 'dired-find-alternate-file 'disabled nil)        ; enable dired-find-alternate-file
-
-  (add-hook 'dired-mode-hook #'toggle-truncate-lines)   ; handle long file names
-  (add-hook 'dired-mode-hook 'auto-revert-mode))        ; auto refresh dired when file changes
-
-(use-package dired-x
-  :ensure nil
-  :bind ("C-x C-j" . dired-jump)
-  :config
-  (validate-setq
-   dired-clean-up-buffers-too t          ; kill buffer of files/dir that are deleted in dired
-   ))
-
-(use-package dired+
-  :config
-  (validate-setq
-   diredp-hide-details-initially-flag t
-   diredp-hide-details-propagate-flag t)
-
-  (toggle-diredp-find-file-reuse-dir 1)        ; use single buffer for all dired navigation
-  ;;(diredp-make-find-file-keys-reuse-dirs)
-  )
-
-(use-package dired-open)
 #+END_SRC
 
 ** easy-kill
@@ -1700,6 +1647,149 @@ I'm start managing my keybindings through General.
 #+END_SRC
 
 * Tools
+
+** dired
+
+Load up the assorted dired extensions.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package dired
+  :ensure nil
+  :config
+  (validate-setq
+   ;; dired-open-extensions                 ; open files with appropriate programs
+   ;; '(("pdf" . "evince")
+   ;;   ("mkv" . "vlc")
+   ;;   ("mp4" . "vlc")
+   ;;   ("avi" . "vlc"))
+)
+
+  (use-package dired-x
+  :ensure nil
+  :bind ("C-x C-j" . dired-jump)
+  :config
+  (validate-setq
+   dired-clean-up-buffers-too t          ; kill buffer of files/dir that are deleted in dired
+   ))
+
+(use-package dired+
+  :config
+  (validate-setq
+   diredp-hide-details-initially-flag t
+   diredp-hide-details-propagate-flag t)
+
+  (toggle-diredp-find-file-reuse-dir 1)        ; use single buffer for all dired navigation
+  ;;(diredp-make-find-file-keys-reuse-dirs)
+  )
+
+(use-package dired-open)
+
+(use-package all-the-icons-dired
+  :after all-the-icons
+  :init
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+#+END_SRC
+
+** Dired - Directory Editing and Navigation
+:PROPERTIES:
+:CUSTOM_ID: dired
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(use-package dired
+  :ensure nil
+  :config
+  (validate-setq
+   ;;ls-lisp-dirs-first t
+   dired-listing-switches
+   "-lhaFG1v --group-directories-first"  ; add ls switches
+
+   dired-ls-F-marks-symlinks t           ; -F marks links with @
+   dired-dwim-target t                   ; use other pane as target
+   dired-recursive-copies 'always        ; copy dirs recursively
+   dired-recursive-deletes 'top          ; ask before deleting dirs recursively
+   delete-by-moving-to-trash t           ; don't delete files outright
+   ;;wdired-allow-to-change-permissions t
+
+   ;;global-auto-revert-non-file-buffers t ; auto refresh Dired
+   ;;auto-revert-verbose nil               ; but be quiet about it
+   ;;dired-auto-revert-buffer t            ; revert buffers on revisiting
+   )
+
+  (customize-set-variable 'diredp-hide-details-initially-flag nil)
+  (put 'dired-find-alternate-file 'disabled nil)        ; enable dired-find-alternate-file
+
+  (add-hook 'dired-mode-hook #'toggle-truncate-lines)   ; handle long file names
+  (add-hook 'dired-mode-hook 'auto-revert-mode)         ; auto refresh dired when file changes
+
+  (define-key dired-mode-map (kbd "C-M-u") #'dired-up-directory)
+  (define-key dired-mode-map (kbd "C-x C-q") #'wdired-change-to-wdired-mode)
+  (bind-key "l" #'dired-up-directory dired-mode-map)
+  (bind-key "M-!" #'async-shell-command dired-mode-map)
+  ;;(add-hook 'dired-mode-hook 'eos/turn-on-hl-line)
+  )
+
+(use-package dired-x
+  :ensure nil
+  :bind ("C-x C-j" . dired-jump)
+  :config
+  (validate-setq
+   dired-clean-up-buffers-too t)          ; kill buffer of files/dir that are deleted in dired
+
+  (add-hook 'dired-mode-hook (lambda ()
+                               (dired-omit-mode)))
+  (add-to-list 'dired-omit-extensions ".DS_Store"))
+
+
+(use-package dired+
+  :config
+  (validate-setq
+   diredp-hide-details-initially-flag t
+   diredp-hide-details-propagate-flag t)
+  (diredp-toggle-find-file-reuse-dir 1)        ; use single buffer for all dired navigation
+  ;;(diredp-make-find-file-keys-reuse-dirs)
+  )
+
+(use-package dired-aux
+  :ensure nil)
+
+;; let's also use async everything in dried
+(use-package dired-async
+  :after async
+  :ensure nil
+  :config
+  (dired-async-mode t)
+  (autoload 'dired-async-mode "dired-async.el" nil t))
+#+END_SRC
+
+Quick-preview provides a nice preview of the thing at point for files, great
+when using dired.
+
+#+BEGIN_SRC emacs-lisp
+(use-package quick-preview
+  :init
+  (global-set-key (kbd "C-c q") 'quick-preview-at-point)
+  (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point))
+#+END_SRC
+
+Dired narrowing allows filtering dired results dynamically with a filter. Very
+cool.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dired-narrow
+  :bind (:map dired-mode-map
+              ("/" . dired-narrow)))
+#+END_SRC
+
+** Icons in Dired buffers (and other buffers)
+
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons-dired
+  :after all-the-icons
+  :init
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+#+END_SRC
+
 ** IRC (Internet Relay Chat)
 IRC is a great way to hang out with other Emacs geeks. I use ERC for that and
 the configuration here is adapted from [[https://github.com/bbatsov/prelude/blob/master/modules/prelude-erc.el][Prelude]].
@@ -2120,10 +2210,12 @@ I am configuring it for PostgreSQL, of course.
 (use-package sqlup-mode
   :bind (("C-c u" . sqlup-capitalize-keywords-in-region))
   :config
-  (add-hook 'sql-mode-hook
-            'sqlup-mode)                ; capitalize keywords in SQL mode
-  (add-hook 'sql-interactive-mode-hook
-            'sqlup-mode))               ; and in an interactive session (e.g. psql)
+  (add-hook 'sql-mode-hook 'sqlup-mode)                ; capitalize keywords in SQL mode
+  (add-hook 'sql-interactive-mode-hook 'sqlup-mode))   ; and in an interactive session (e.g. psql)
+
+(use-package sql-indent
+  :config
+  (add-hook 'sql-mode-hook 'sqlind-setup))
 #+END_SRC
 
 ** yaml
