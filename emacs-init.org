@@ -1649,49 +1649,6 @@ I'm start managing my keybindings through General.
 #+END_SRC
 
 * Tools
-
-** dired
-
-Load up the assorted dired extensions.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(use-package dired
-  :ensure nil
-  :config
-  (validate-setq
-   ;; dired-open-extensions                 ; open files with appropriate programs
-   ;; '(("pdf" . "evince")
-   ;;   ("mkv" . "vlc")
-   ;;   ("mp4" . "vlc")
-   ;;   ("avi" . "vlc"))
-)
-
-  (use-package dired-x
-  :ensure nil
-  :bind ("C-x C-j" . dired-jump)
-  :config
-  (validate-setq
-   dired-clean-up-buffers-too t          ; kill buffer of files/dir that are deleted in dired
-   ))
-
-(use-package dired+
-  :config
-  (validate-setq
-   diredp-hide-details-initially-flag t
-   diredp-hide-details-propagate-flag t)
-
-  (toggle-diredp-find-file-reuse-dir 1)        ; use single buffer for all dired navigation
-  ;;(diredp-make-find-file-keys-reuse-dirs)
-  )
-
-(use-package dired-open)
-
-(use-package all-the-icons-dired
-  :after all-the-icons
-  :init
-  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
-#+END_SRC
-
 ** Dired - Directory Editing and Navigation
 :PROPERTIES:
 :CUSTOM_ID: dired
@@ -1702,18 +1659,34 @@ inside a dired buffer.
 
 Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.html][Xah Lee's blog]].
 
-| Keybinding | Description                                                                    |
-|------------+--------------------------------------------------------------------------------|
-| ~^~          | go to parent directory (=dired-up-directory=)                                    |
-| ~a~          | open directory in the current buffer (=dired-find-alternate-file=)               |
-| ~n~          | go next line        (=dired-next-line)=                                          |
-| ~p~          | go prevous line     (=dired-previous-line)=                                      |
-| ~m~          | mark files/dir      (=dired-mark)=                                               |
-| ~u~          | unmark files/dir    (=dired-unmark)=                                             |
-| ~&~          | run shell commands  (=dired-do-async-shell-command)                             |
-| ~c~          | compress files/dir  (=dired-do-compress-to=) Mark them first. Details in [[http://oremacs.com/2015/10/23/dired-compress/][oremacs]] |
-| ~z~          | compress/decompress (=dired-do-compress)=                                        |
-| ~/~          | filter files        (=dired-narrow)=                                             |
+| *Key* | *Command*                              | *Description*                                   |
+|-----+--------------------------------------+-----------------------------------------------|
+| ~^~   | =dired-up-directory=                   | go to parent directory                        |
+| ~n~   | =dired-next-line=                      | go next line                                  |
+| ~p~   | =dired-previous-line=                  | go prevous line                               |
+| ~m~   | =dired-mark=                           | mark files/dir                                |
+| ~u~   | =dired-unmark=                         | unmark files/dir                              |
+| ~U~   | =dired-unmark-all-marks=               | unmark all marked                             |
+| ~% m~ | =dired-mark-files-regexp=              | mark by pattern (regex)                       |
+| ~&~   | =dired-do-async-shell-command=         | run shell commands                            |
+| ~C~   | =dired-do-copy=                        | Copy file                                     |
+| ~R~   | =dired-do-rename=                      | Rename/move file                              |
+| ~D~   | =dired-do-delete=                      | Delete file or directory                      |
+| ~c~   | =dired-do-compress-to=                 | compress marked files/dir. Details in [[http://oremacs.com/2015/10/23/dired-compress/][oremacs]] |
+| ~Z~   | =dired-do-compress=                    | compress/decompress marked files              |
+| ~z~   | =diredp-compress-this-file=            | compress/decompress file on cursor line       |
+| ~/~   | =dired-narrow=                         | filter files                                  |
+| ~a~   | =dired-find-alternate-file=            | open directory in the current buffer          |
+| ~o~   | =dired-find-file-other-windows=        | open file on another window                   |
+| ~F~   | =dired-do-find-marked-files=           | open all marked files                         |
+| ~*.~  | =diredp-mark/unmark-extension=         | mark files by extension                       |
+| ~+~   | =dired-create-directory=               | create a new directory                        |
+| ~_~   | =xah-dired-rename-space-to-underscore= | rename file from space to underscore          |
+| ~-~   | =xah-dired-rename-space-to-hyphen=     | rename file from space to hyphen              |
+| ~s~   | =xah-dired-sort=                       | sort files by name,type,size                  |
+| ~g~   | =revert-buffer=                        | refresh dir listing                           |
+
+*** Main configuration
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
@@ -1739,13 +1712,19 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
   (add-hook 'dired-mode-hook #'toggle-truncate-lines)   ; handle long file names
   (add-hook 'dired-mode-hook 'auto-revert-mode)         ; auto refresh dired when file changes
 
-  ;;(define-key dired-mode-map (kbd "C-x C-q") #'wdired-change-to-wdired-mode)
   (bind-key "M-!" #'async-shell-command dired-mode-map)
   ;;(add-hook 'dired-mode-hook 'eos/turn-on-hl-line)
   )
 
+(use-package dired-aux :ensure nil)
+#+END_SRC
+
+*** dired-x
+
+#+BEGIN_SRC emacs-lisp
 (use-package dired-x
   :ensure nil
+  :demand t
   :bind ("C-x C-j" . dired-jump)
   :config
   (validate-setq
@@ -1754,10 +1733,13 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
   (add-hook 'dired-mode-hook (lambda ()
                                (dired-omit-mode)))
   (add-to-list 'dired-omit-extensions ".DS_Store"))
+#+END_SRC
 
+*** dired-plus
 
+#+BEGIN_SRC emacs-lisp
 (use-package dired+
-  :demand
+  :demand t
   :config
   (validate-setq
    diredp-hide-details-initially-flag t
@@ -1775,18 +1757,23 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
 
   (customize-set-variable 'diredp-hide-details-initially-flag nil) ; keep showing info
   )
+#+END_SRC
 
-(use-package dired-aux
-  :ensure nil)
+*** dired-async
 
-;; let's also use async everything in dried
+Use async in everything in dired.
+
+#+BEGIN_SRC emacs-lisp
 (use-package dired-async
   :after async
   :ensure nil
+  :demand t
   :config
   (dired-async-mode t)
   (autoload 'dired-async-mode "dired-async.el" nil t))
 #+END_SRC
+
+*** Quick-preview
 
 Quick-preview provides a nice preview of the thing at point for files, great
 when using dired.
@@ -1798,6 +1785,8 @@ when using dired.
   (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point))
 #+END_SRC
 
+*** Filtering with dired-narrow
+
 Dired narrowing allows filtering dired results dynamically with a filter. Very
 cool.
 
@@ -1807,13 +1796,84 @@ cool.
               ("/" . dired-narrow)))
 #+END_SRC
 
-** Icons in Dired buffers (and other buffers)
+*** Icons in Dired buffers (and other buffers)
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons-dired
   :after all-the-icons
   :init
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+#+END_SRC
+
+*** Sort files in dired (by time, size, name)
+
+Here's a emacs command that lets you sort dired file listing by any {date/time,
+size, name, dir}. Found it on [[http://ergoemacs.org/emacs/dired_sort.html][Xah Lee's blog]].
+
+*Note*: this may not work in Mac OS X. You need to have GNU's version of ls.
+
+#+BEGIN_SRC emacs-lisp
+(defun xah-dired-sort ()
+  "Sort dired dir listing in different ways.
+Prompt for a choice.
+URL `http://ergoemacs.org/emacs/dired_sort.html'
+Version 2015-07-30"
+  (interactive)
+  (let (-sort-by -arg)
+    (setq -sort-by (ido-completing-read "Sort by:" '( "date" "size" "name" "dir")))
+    (cond
+     ((equal -sort-by "name") (setq -arg "-Al --si --time-style long-iso "))
+     ((equal -sort-by "date") (setq -arg "-Al --si --time-style long-iso -t"))
+     ((equal -sort-by "size") (setq -arg "-Al --si --time-style long-iso -S"))
+     ((equal -sort-by "dir") (setq -arg "-Al --si --time-style long-iso --group-directories-first"))
+     (t (error "logic error 09535" )))
+    (dired-sort-other -arg )))
+
+(define-key dired-mode-map (kbd "s") 'xah-dired-sort)
+#+END_SRC
+
+*** Rename file from space to hyphen/underscore
+
+Here's a command that rename files by replacing space to underscore _ or hyphen -.
+
+In dired, just press a key, then the file under cursor (or marked files) will be
+renamed with all space replaced to underscore.
+
+#+BEGIN_SRC emacs-lisp
+(defun xah-dired-rename-space-to-underscore ()
+  "In dired, rename current or marked files by replacing space to underscore _.
+If not in `dired', do nothing.
+URL `http://ergoemacs.org/emacs/elisp_dired_rename_space_to_underscore.html'
+Version 2017-01-02"
+  (interactive)
+  (require 'dired-aux)
+  (if (equal major-mode 'dired-mode)
+      (progn
+        (mapc (lambda (x)
+                (when (string-match " " x )
+                  (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
+              (dired-get-marked-files ))
+        (revert-buffer))
+    (user-error "Not in dired.")))
+
+(defun xah-dired-rename-space-to-hyphen ()
+  "In dired, rename current or marked files by replacing space to hyphen -.
+If not in `dired', do nothing.
+URL `http://ergoemacs.org/emacs/elisp_dired_rename_space_to_underscore.html'
+Version 2016-12-22"
+  (interactive)
+  (require 'dired-aux)
+  (if (equal major-mode 'dired-mode)
+      (progn
+        (mapc (lambda (x)
+                (when (string-match " " x )
+                  (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
+              (dired-get-marked-files ))
+        (revert-buffer))
+    (user-error "Not in dired")))
+
+(define-key dired-mode-map (kbd "_") 'xah-dired-rename-space-to-underscore)
+(define-key dired-mode-map (kbd "-") 'xah-dired-rename-space-to-hyphen)
 #+END_SRC
 
 ** IRC (Internet Relay Chat)
