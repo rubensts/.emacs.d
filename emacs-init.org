@@ -143,30 +143,6 @@ Set better defaults do Emacs. Some of the preferences here were taken from
 
 (fset 'yes-or-no-p 'y-or-n-p)                  ; ask `y/n?` instead of `yes/no?`
 
-(validate-setq inhibit-startup-message t       ; don't show startup message
-               initial-scratch-message nil     ; clear the scratch buffer
-               mouse-yank-at-point t           ; paste from clipboard to where point is on buffer
-               echo-keystrokes 0.1             ; shows keystrokes in progress
-               use-dialog-box nil              ; don't use dialog when using mouse click
-               line-spacing '0.10              ; line height
-               default-directory "~/"          ; when opening files search from home directory
-               vc-follow-symlinks t            ; when opening files follow symlinks
-               sentence-end-double-space nil   ; sentences don't need to have two spaces after periods
-               require-final-newline t         ; ensure files end with newline
-               confirm-kill-emacs 'y-or-n-p    ; ask for confirmation to close Emacs
-               )
-
-(setq apropos-do-all t)                        ; apropos commands perform more extensive searches than default
-
-(setq-default indicate-empty-lines t)          ; show empty lines at bottom of buffer
-(when (not indicate-empty-lines)
-  (toggle-indicate-empty-lines))
-
-(setq-default indent-tabs-mode  nil            ; always indent with spaces
-              default-tab-width 4
-              c-basic-offset 4
-              fill-column 80)                  ; set default line length
-
 (transient-mark-mode t)                        ; apply changes to highlighted region
 (delete-selection-mode t)                      ; overwrite selected text when typing
 (blink-cursor-mode -1)                         ; turn of the blinking cursor
@@ -176,9 +152,9 @@ Set better defaults do Emacs. Some of the preferences here were taken from
 (global-prettify-symbols-mode 1)               ; prettify symbols (lambdas, etc)
 (global-font-lock-mode t)                      ; always highlight code
 (global-auto-revert-mode t)                    ; refresh buffers when files change
+(column-number-mode t)                         ; shows column number on the modeline
 (save-place-mode 1)                            ; save cursor position for opened files
 (show-paren-mode t)                            ; show matching parentheses
-(setq show-paren-delay 0.0)                    ; set delay to 0 for showing matching parens
 
 (defalias 'list-buffers 'ibuffer)              ; use ibuffer by default
 
@@ -190,10 +166,32 @@ Set better defaults do Emacs. Some of the preferences here were taken from
 (prefer-coding-system        'utf-8)
 (set-input-method nil)
 
-;; settings for the modeline
-(column-number-mode t)                         ; shows column number on the modeline
-(setq size-indication-mode t)
-;;(which-function-mode 1)
+(validate-setq inhibit-startup-message t       ; don't show startup message
+               initial-scratch-message nil     ; clear the scratch buffer
+               mouse-yank-at-point t           ; paste from clipboard to where point is on buffer
+               echo-keystrokes 0.1             ; shows keystrokes in progress
+               use-dialog-box nil              ; don't use dialog when using mouse click
+               line-spacing '0.10              ; line height
+               default-directory "~/"          ; when opening files search from home directory
+               vc-follow-symlinks t            ; when opening files follow symlinks
+               sentence-end-double-space nil   ; sentences don't need to have two spaces after periods
+               require-final-newline t         ; ensure files end with newline
+               confirm-kill-emacs 'y-or-n-p    ; ask for confirmation to close Emacs
+               auto-revert-verbose nil         ; turn off auto revert messages in the minibuffer
+               size-indication-mode t          ; displays the buffer size in the modeline
+               show-paren-delay 0.0            ; set delay to 0 for showing matching parens
+               )
+
+(setq apropos-do-all t)                        ; perform more extensive searches than default
+
+(setq-default indicate-empty-lines t)          ; show empty lines at bottom of buffer
+(when (not indicate-empty-lines)
+  (toggle-indicate-empty-lines))
+
+(setq-default indent-tabs-mode  nil            ; always indent with spaces
+              default-tab-width 4
+              c-basic-offset 4
+              fill-column 80)                  ; set default line length
 
 ;; silence the beep sound, and shows the alarm bell visually on the modeline
 (setq ring-bell-function
@@ -321,42 +319,6 @@ automatically moves to the new splited window.
              ("C-x 3" . split-right-and-move))
 #+END_SRC
 
-*** Smarter start of line
-
-This function, from [[http://emacsredux.com/blog/2013/05/22/smarter-navigation-to-the-beginning-of-a-line/][emacsredux]] blog, defines a better start of line and remaps
-~C-a~ for it.
-
-#+BEGIN_SRC emacs-lisp
-  (defun smarter-move-beginning-of-line (arg)
-    "Move point back to indentation of beginning of line.
-
-  Move point to the first non-whitespace character on this line.
-  If point is already there, move to the beginning of the line.
-  Effectively toggle between the first non-whitespace character and
-  the beginning of the line.
-
-  If ARG is not nil or 1, move forward ARG - 1 lines first.  If
-  point reaches the beginning or end of the buffer, stop there."
-    (interactive "^p")
-    (setq arg (or arg 1))
-
-    ;; Move lines first
-    (when (/= arg 1)
-      (let ((line-move-visual nil))
-        (forward-line (1- arg))))
-
-    (let ((orig-point (point)))
-      (back-to-indentation)
-      (when (= orig-point (point))
-        (move-beginning-of-line 1))))
-
-  ;; remap C-a to `smarter-move-beginning-of-line'
-  (global-set-key [remap move-beginning-of-line]
-                  'smarter-move-beginning-of-line)
-
-  (global-set-key (kbd "C-a") 'smarter-move-beginning-of-line)
-#+END_SRC
-
 *** Kill the current buffer
 
 Change the key-binding to kill the current buffer instead of asking which one to
@@ -421,6 +383,113 @@ to (recursively) create the file's parent directories."
                   (when (and (not (file-exists-p dir))
                              (y-or-n-p (format "Directory %s does not exist. Create it?" dir)))
                     (make-directory dir t)))))))
+#+END_SRC
+
+* Keybindings
+
+I'm start managing my keybindings through General.
+
+#+BEGIN_SRC emacs-lisp
+(use-package general
+  :demand t
+  :after evil
+  :config
+  (general-define-key
+   :states '(normal visual insert emacs)
+   :prefix "SPC"
+   :non-normal-prefix "C-SPC"
+
+   ;; simple command
+   ;;"'"   '(iterm-focus :which-key "iterm")
+   ;;"?"   '(iterm-goto-filedir-or-home :which-key "iterm - goto dir")
+   ;;"/"   'counsel-ag
+   "SPC" '(avy-goto-word-or-subword-1 :which-key "go to char")
+   "iu" 'insert-char
+   "ne" 'flycheck-next-error
+   "pe" 'flycheck-previous-error
+   "qq" 'save-buffers-kill-emacs
+   "zp" 'zeal-at-point
+   "cy" 'clipboard-kill-ring-save
+   ;;"cp" 'clipboard-yank
+
+   ;; buffers
+   "TAB" '(switch-to-other-buffer :which-key "prev buffer")
+   "b" '(:ignore t :which-key "Buffers")
+   "bb" 'switch-to-buffer
+   "bd" 'kill-this-buffer
+   "by" 'copy-whole-buffer
+
+   ;; windows
+   "w1" 'delete-other-windows
+   "w2" 'split-below-and-move
+   "w3" 'split-right-and-move
+   "wk" 'windmove-left
+   "wj" 'windmove-right
+
+   ;; eyebrowse - workspaces
+   "0" 'eyebrowse-switch-to-window-config-0
+   "1" 'eyebrowse-switch-to-window-config-1
+   "2" 'eyebrowse-switch-to-window-config-2
+   "3" 'eyebrowse-switch-to-window-config-3
+   "4" 'eyebrowse-switch-to-window-config-4
+   "5" 'eyebrowse-switch-to-window-config-5
+   "6" 'eyebrowse-switch-to-window-config-6
+   "7" 'eyebrowse-switch-to-window-config-7
+   "8" 'eyebrowse-switch-to-window-config-8
+   "9" 'eyebrowse-switch-to-window-config-9
+
+   ;; files
+   "f" '(:ignore t :which-key "Files")
+   "ff" 'find-file
+   "fl" 'load-file
+   "fs" 'save-buffer
+
+   ;; modes
+   "m" '(:ignore t :which-key "Modes")
+   "ml" 'linum-mode
+   "mw" 'whitespace-mode
+
+   ;; applications
+   "a" '(:ignore t :which-key "Applications")
+   "ad" 'dired-jump
+   "am" 'notmuch
+
+   ;; git
+   "g" '(:ignore t :which-key "GIT")
+   "gs" 'magit-status
+
+   ;; spelling
+   "s" '(:ignore t :which-key "Spelling")
+   "sb" 'flyspell-buffer
+   "sd" 'switch-dictionary
+   "sn" 'flyspell-goto-next-error
+   "sp" 'flyspell-popup-correct
+   "sw" 'flyspell-auto-correct-word
+   "sz" 'flyspell-lazy-check-buffer
+
+   ;; evil-nerd-commenter
+   ;; "ci" 'evilnc-comment-or-uncomment-lines
+   ;; "cl" 'evilnc-quick-comment-or-uncomment-to-the-line
+   ;; "cc" 'evilnc-copy-and-comment-lines
+   ;; "cp" 'evilnc-comment-or-uncomment-paragraphs
+   ;; "cr" 'comment-or-uncomment-region
+   ;; "cv" 'evilnc-toggle-invert-comment-line-by-line
+   ;; "."  'evilnc-copy-and-comment-operator
+   )
+
+  (general-define-key :keymaps 'dired-mode-map
+                      :prefix ","
+                      "&" 'dired-do-async-shell-command
+                      "s" 'dired-get-size
+                      "_" 'xah-dired-rename-space-to-underscore
+                      "-" 'xah-dired-rename-space-to-hyphen)
+
+  (general-define-key :keymaps 'org-mode-map
+                      :prefix ","
+                      "d" 'org-clock-display
+                      "i" 'org-clock-in
+                      "o" 'org-clock-out)
+)
 #+END_SRC
 
 * Main packages
@@ -518,10 +587,10 @@ authoring documents with a fast and effective plain-text system...bu not only :)
 Actually, org-mode is the solely reason why many people recently have decided to
 try Emacs, then they are hooked ;)
 
-| Keys        | Command | Results                    |
-|-------------+---------+----------------------------|
-| C-c C-x C-l |         | Show latex fragments       |
-| C-c C-c     |         | Get rid of latex fragments |
+| Key         | Command                   | Description                |
+|-------------+---------------------------+----------------------------|
+| C-c C-x C-l | =org-toggle-latex-fragment= | Show latex fragments       |
+| C-c C-c     | =org-ctrl-c-ctrl-c=         | Get rid of latex fragments |
 
 *** general settings
 
@@ -817,8 +886,7 @@ the overview.
                  ivy-re-builders-alist '((t . ivy--regex-plus))
                  ivy-use-ignore-default 'always    ; ignore buffers set in `ivy-ignore-buffers'
                  ivy-ignore-buffers                ; ignore some buffers in `ivy-switch-buffer'
-                 '("company-statistics-cache.el"
-                   ".elfeed/index")
+                 '("company-statistics-cache.el" ".elfeed/index")
                  swiper-action-recenter t          ; always recenter when leaving swiper
                  )
 
@@ -928,6 +996,7 @@ Commands are all prefixed by ~C-x x~
   (projectile-global-mode))
 
 (use-package perspective
+  :demand t
   :config
   (persp-mode))
 
@@ -1101,7 +1170,10 @@ defines a proper completion function.
 few useful interactive commands to enhance your overall Emacs experience.
 
 #+BEGIN_SRC emacs-lisp
-(use-package crux)
+(use-package crux
+  :demand t
+  :bind (("C-a"   . crux-move-beginning-of-line)
+         ("C-c o" . crux-open-with)))
 #+END_SRC
 
 ** diff-hl (FIXME)
@@ -1209,6 +1281,15 @@ sees unicode encoded files as binary files ([[http://stackoverflow.com/questions
             (insert ,k)))))
    (list " " "-" "+"))
   )
+#+END_SRC
+
+** eyebrowse
+
+#+BEGIN_SRC emacs-lisp
+(use-package eyebrowse
+  :demand t
+  :config
+  (eyebrowse-mode t))
 #+END_SRC
 
 ** expand-region
@@ -1568,86 +1649,6 @@ prefix) in a popup.
                     ("RET"                 . "⏎"))))
 #+END_SRC
 
-* Keybindings
-I'm start managing my keybindings through General.
-
-#+BEGIN_SRC emacs-lisp
-(use-package general
-  :demand t
-  :after evil
-  :config
-  (general-define-key
-   :states '(normal visual insert emacs)
-   :prefix "SPC"
-   :non-normal-prefix "C-SPC"
-
-   ;; simple command
-   ;;"'"   '(iterm-focus :which-key "iterm")
-   ;;"?"   '(iterm-goto-filedir-or-home :which-key "iterm - goto dir")
-   ;;"/"   'counsel-ag
-   "SPC" '(avy-goto-word-or-subword-1 :which-key "go to char")
-   "iu" 'insert-char
-   "ne" 'flycheck-next-error
-   "pe" 'flycheck-previous-error
-   "qq" 'save-buffers-kill-emacs
-   "zp" 'zeal-at-point
-   "cy" 'clipboard-kill-ring-save
-   ;;"cp" 'clipboard-yank
-
-   ;; buffers
-   "TAB" '(switch-to-other-buffer :which-key "prev buffer")
-   "b" '(:ignore t :which-key "Buffers")
-   "bb" 'switch-to-buffer
-   "bd" 'kill-this-buffer
-   "by" 'copy-whole-buffer
-
-   ;; windows
-   "w1" 'delete-other-windows
-   "w2" 'split-below-and-move
-   "w3" 'split-right-and-move
-   "wk" 'windmove-left
-   "wj" 'windmove-right
-
-   ;; files
-   "f" '(:ignore t :which-key "Files")
-   "ff" 'find-file
-   "fl" 'load-file
-   "fs" 'save-buffer
-
-   ;; modes
-   "m" '(:ignore t :which-key "Modes")
-   "ml" 'linum-mode
-   "mw" 'whitespace-mode
-
-   ;; applications
-   "a" '(:ignore t :which-key "Applications")
-   "ad" 'dired
-   "am" 'notmuch
-
-   ;; git
-   "g" '(:ignore t :which-key "GIT")
-   "gs" 'magit-status
-
-   ;; spelling
-   "s" '(:ignore t :which-key "Spelling")
-   "sb" 'flyspell-buffer
-   "sd" 'switch-dictionary
-   "sn" 'flyspell-goto-next-error
-   "sp" 'flyspell-popup-correct
-   "sw" 'flyspell-auto-correct-word
-   "sz" 'flyspell-lazy-check-buffer
-
-   ;; evil-nerd-commenter
-   ;; "ci" 'evilnc-comment-or-uncomment-lines
-   ;; "cl" 'evilnc-quick-comment-or-uncomment-to-the-line
-   ;; "cc" 'evilnc-copy-and-comment-lines
-   ;; "cp" 'evilnc-comment-or-uncomment-paragraphs
-   ;; "cr" 'comment-or-uncomment-region
-   ;; "cv" 'evilnc-toggle-invert-comment-line-by-line
-   ;; "."  'evilnc-copy-and-comment-operator
-   ))
-#+END_SRC
-
 * Tools
 ** Dired - Directory Editing and Navigation
 :PROPERTIES:
@@ -1684,13 +1685,15 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
 | ~F~       | =dired-do-find-marked-files=           | open all marked files                         |
 | ~*.~      | =diredp-mark/unmark-extension=         | mark files by extension                       |
 | ~+~       | =dired-create-directory=               | create a new directory                        |
+| ~P~       | =peep-dired=                           | preview file at point                         |
+| ~S~       | =dired-quick-sort=                     | sort files by name, type, size                |
 | ~_~       | =xah-dired-rename-space-to-underscore= | rename file from space to underscore          |
 | ~-~       | =xah-dired-rename-space-to-hyphen=     | rename file from space to hyphen              |
-| ~s~       | =xah-dired-sort=                       | sort files by name,type,size                  |
 | ~g~       | =revert-buffer=                        | refresh dir listing                           |
 | ~C-x C-p~ | =dired-toggle-read-only=               | make dired buffer writable                    |
 | ~C-c C-c~ |                                      | apply the modifications on writable buffer    |
 | ~C-c ESC~ |                                      | discard the modifications                     |
+| ~C-u s~   | =dired-sort-toggle-or-edit=            | change `ls` switches on the fly               |
 
 *** Main configuration
 
@@ -1701,25 +1704,20 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
   (validate-setq
    ;;ls-lisp-dirs-first t
    dired-listing-switches
-   "-lhaFG1v --group-directories-first"  ; add ls switches
+   "-lhFG1v --group-directories-first"  ; add ls switches
 
    dired-ls-F-marks-symlinks t           ; -F marks links with @
    dired-dwim-target t                   ; when in a split windows, use other pane as target
    dired-recursive-copies 'always        ; copy dirs recursively
    dired-recursive-deletes 'top          ; ask before deleting dirs recursively
    delete-by-moving-to-trash t           ; don't delete files outright
-   ;;wdired-allow-to-change-permissions t
-
-   ;;global-auto-revert-non-file-buffers t ; auto refresh Dired
-   ;;auto-revert-verbose nil               ; but be quiet about it
-   ;;dired-auto-revert-buffer t            ; revert buffers on revisiting
+   dired-auto-revert-buffer t            ; revert buffers on revisiting
    )
+
+  (setq wdired-allow-to-change-permissions t)  ; allow editing file permissions
 
   (add-hook 'dired-mode-hook #'toggle-truncate-lines)   ; handle long file names
   (add-hook 'dired-mode-hook 'auto-revert-mode)         ; auto refresh dired when file changes
-
-  (bind-key "M-!" #'async-shell-command dired-mode-map)
-  ;;(add-hook 'dired-mode-hook 'eos/turn-on-hl-line)
   )
 
 ;; Built into Emacs, it provides chgrp, chown, chmod and other functionalities
@@ -1754,7 +1752,6 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
   (diredp-toggle-find-file-reuse-dir 1)        ; use single buffer for all dired navigation
   (diredp-make-find-file-keys-reuse-dirs)
 
-  ;; TODO use this with General
   ;; assign h and l to be used on dired mode (evil keys)
   (eval-after-load 'dired
     '(evil-define-key 'normal dired-mode-map
@@ -1779,6 +1776,18 @@ Use async in everything in dired.
   (autoload 'dired-async-mode "dired-async.el" nil t))
 #+END_SRC
 
+*** dired-quick-sort
+
+[[https://gitlab.com/xuhdev/dired-quick-sort][dired-quick-sort]] provides persistent quick sorting of Dired buffers in various
+ways with hydra.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dired-quick-sort
+  :demand t
+  :config
+  (dired-quick-sort-setup))
+#+END_SRC
+
 *** dired-hacks
 
 [[https://github.com/Fuco1/dired-hacks][dired-hacks]] is a collection of useful dired additions.
@@ -1794,16 +1803,24 @@ cool.
               ("/" . dired-narrow)))
 #+END_SRC
 
-*** Quick-preview
-
-Quick-preview provides a nice preview of the thing at point for files, great
-when using dired.
+**** dired-rainbow
 
 #+BEGIN_SRC emacs-lisp
-(use-package quick-preview
-  :init
-  (global-set-key (kbd "C-c q") 'quick-preview-at-point)
-  (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point))
+(use-package dired-rainbow
+  :demand t)
+#+END_SRC
+
+*** peep-dired
+
+[[https://github.com/asok/peep-dired][peep-dired]] is a convienent way to look up file contents in other window while
+browsing directory in dired.
+
+#+BEGIN_SRC emacs-lisp
+(use-package peep-dired
+  :bind (:map dired-mode-map
+              ("P" . peep-dired))
+  :config
+  (validate-setq peep-dired-ignored-extensions '("mkv" "iso" "mp4")))
 #+END_SRC
 
 *** Icons in Dired buffers (and other buffers)
@@ -1815,35 +1832,7 @@ when using dired.
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 #+END_SRC
 
-*** Custom functions
-**** Sort files in dired (by time, size, name)
-
-Here's a emacs command that lets you sort dired file listing by any {date/time,
-size, name, dir}. Found it on [[http://ergoemacs.org/emacs/dired_sort.html][Xah Lee's blog]].
-
-*Note*: this may not work in Mac OS X. You need to have GNU's version of ls.
-
-#+BEGIN_SRC emacs-lisp
-(defun xah-dired-sort ()
-  "Sort dired dir listing in different ways.
-Prompt for a choice.
-URL `http://ergoemacs.org/emacs/dired_sort.html'
-Version 2015-07-30"
-  (interactive)
-  (let (-sort-by -arg)
-    (setq -sort-by (ido-completing-read "Sort by:" '( "date" "size" "name" "dir")))
-    (cond
-     ((equal -sort-by "name") (setq -arg "-Al --si --time-style long-iso "))
-     ((equal -sort-by "date") (setq -arg "-Al --si --time-style long-iso -t"))
-     ((equal -sort-by "size") (setq -arg "-Al --si --time-style long-iso -S"))
-     ((equal -sort-by "dir") (setq -arg "-Al --si --time-style long-iso --group-directories-first"))
-     (t (error "logic error 09535" )))
-    (dired-sort-other -arg )))
-
-(define-key dired-mode-map (kbd "s") 'xah-dired-sort)
-#+END_SRC
-
-**** Rename file from space to hyphen/underscore
+*** Rename file from space to hyphen/underscore
 
 Here's a command that rename files by replacing space to underscore _ or hyphen -.
 
@@ -1882,9 +1871,23 @@ Version 2016-12-22"
               (dired-get-marked-files ))
         (revert-buffer))
     (user-error "Not in dired")))
+#+END_SRC
 
-(define-key dired-mode-map (kbd "_") 'xah-dired-rename-space-to-underscore)
-(define-key dired-mode-map (kbd "-") 'xah-dired-rename-space-to-hyphen)
+*** Calculate size of directory
+
+The title says it all. It is originally from the [[https://www.emacswiki.org/emacs/DiredGetFileSize][Wiki]] but I found it [[https://oremacs.com/2015/01/12/dired-file-size/][here]].
+
+#+BEGIN_SRC emacs-lisp
+(defun dired-get-size ()
+  (interactive)
+  (let ((files (dired-get-marked-files)))
+    (with-temp-buffer
+      (apply 'call-process "/usr/bin/du" nil t nil "-sch" files)
+      (message
+       "Size of all marked files: %s"
+       (progn
+         (re-search-backward "\\(^[ 0-9.,]+[A-Za-z]+\\).*total$")
+         (match-string 1))))))
 #+END_SRC
 
 ** IRC (Internet Relay Chat)
