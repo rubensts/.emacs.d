@@ -485,7 +485,9 @@ I'm start managing my keybindings through General.
                       "-" 'xah-dired-rename-space-to-hyphen)
 
   (general-define-key :keymaps 'org-mode-map
+                      :states '(normal visual)
                       :prefix ","
+                      "c" 'org-capture
                       "d" 'org-clock-display
                       "i" 'org-clock-in
                       "o" 'org-clock-out)
