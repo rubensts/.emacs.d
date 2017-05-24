@@ -1309,11 +1309,15 @@ Toggle the vertical column that indicates the fill threshold.
 
 #+BEGIN_SRC emacs-lisp
 (use-package fill-column-indicator
+  :disabled t
   :config
-  (fci-mode t)
-  (setq fci-rule-width 1
-        fci-rule-color "#5d478b"
-        fci-rule-column 80))
+  (validate-setq fci-rule-width 1
+                 fci-rule-color "#5d478b"
+                 fci-rule-column 80)
+  (define-globalized-minor-mode global-fci-mode fci-mode
+    (lambda ()
+      (fci-mode 1)))
+  (global-fci-mode 1))
 #+END_SRC
 
 ** fixmee
