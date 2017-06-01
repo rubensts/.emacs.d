@@ -609,7 +609,7 @@ try Emacs, then they are hooked ;)
   :config
   (validate-setq
    org-tags-column 90                      ; column to which the tags have to be indented
-   org-ellipsis "⤵"                        ; ⬎, ⤷, ⤵, ⚡
+   org-ellipsis " ⤵ "                        ; ⬎, ⤷, ⤵, ⚡, 
    org-fontify-whole-heading-line t        ; fontify the whole line for headings
    org-fontify-done-headline t
    org-fontify-quote-and-verse-blocks t
@@ -2587,4 +2587,9 @@ for minor modes, which makes the configuration simpler.
   :ensure nil
   :config
   (spaceline-spacemacs-theme))
+
+(use-package spaceline-all-the-icons
+  :disabled t
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
 #+END_SRC
