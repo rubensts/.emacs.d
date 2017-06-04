@@ -88,11 +88,20 @@ For installing Emacs on Mac, check these:
 - [[http://www.reddit.com/r/emacs/comments/195163/hey_mac_users/][reddit - emacs-mac-port]]
 
 * Built-in Capabilities
+** Initialization
+
+#+BEGIN_SRC emacs-lisp
+(when (version< emacs-version "25")
+  (warn "This configuration needs Emacs 25, but this is %s!" emacs-version))
+
+;; Disables calling default.el (default settings) after init.el
+(setq inhibit-default-init t)
+#+END_SRC
+
 ** OS compatibility
 
-Check which OS for keeping compatibility.
-The functions ~system-is-mac~ and ~system-is-linux~ is called throughout this org
-file.
+Check which OS for keeping compatibility. The functions ~system-is-mac~ and
+~system-is-linux~ is called throughout this org file.
 
 #+BEGIN_SRC emacs-lisp
 (defun system-is-mac ()
@@ -103,6 +112,23 @@ file.
   (interactive)
   (string-equal system-type "gnu/linux"))
 #+END_SRC
+
+** Environment fixup
+
+#+BEGIN_SRC emacs-lisp
+(use-package exec-path-from-shell
+  :if (display-graphic-p)
+  :demand t
+  :config
+  (progn
+    (when (string-match-p "/zsh$" (getenv "SHELL"))
+      ;; Use a non-interactive login shell.  A login shell, because my
+      ;; environment variables are mostly set in `.zprofile'.
+      (setq exec-path-from-shell-arguments '("-l")))
+
+    ;; Initialize Emacs' environment from the shell
+    (exec-path-from-shell-initialize)))
+ #+END_SRC
 
 ** Custom file
 
@@ -2512,13 +2538,13 @@ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-setti
                            :height 90))
       ((system-is-mac)
        (set-face-attribute 'default nil
-                           :family "Source Code Pro"
-                           :height 100)))
+                           :family "Source Code Pro for Powerline"
+                           :height 110)))
 
 ;; Set a smaller font for the mode line
 (set-face-attribute 'mode-line nil
-                    :family "Source Code Pro"
-                    :height 90)
+                    :family "Source Code Pro for Powerline"
+                    :height 100)
 
 ;; Set a font with great support for Unicode Symbols to fallback in those case
 ;; where certain Unicode glyphs are missing in the current font.
