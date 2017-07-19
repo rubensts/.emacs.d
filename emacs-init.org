@@ -659,6 +659,10 @@ try Emacs, then they are hooked ;)
    org-agenda-files (list "~/org/todo.org"
                           "~/org/clockin.org"))
 
+   ;; Refile
+  (setq org-refile-targets '((org-agenda-files :maxlevel . 3)))
+  (setq org-refile-use-outline-path 'file)
+
   ;; TODO workflow states
   org-todo-keywords
   '("☛ TODO(t)" "⚑ WAIT(w@)" "|" "✔ DONE(d)" "✘ CANCEL(c@)")
@@ -852,6 +856,12 @@ Babel is Org-mode’s ability to execute source code within Org-mode documents.
            (sqlite . t)
            (sql . t)
            ))))
+
+;; site:https://www.wisdomandwonder.com/article/10581/maybe-the-four-most-important-key-bindings-for-high-speed-org-mode-literate-programming
+(define-key org-mode-map (kbd "s-j") #'org-babel-next-src-block)
+(define-key org-mode-map (kbd "s-k") #'org-babel-previous-src-block)
+(define-key org-mode-map (kbd "s-l") #'org-edit-src-code)
+(define-key org-src-mode-map (kbd "s-l") #'org-edit-src-exit)
 #+END_SRC
 
 ** hydra
@@ -950,6 +960,12 @@ the overview.
 ;; Hydra bindings for ivy buffer
 (use-package ivy-hydra
   :after ivy)
+
+(use-package all-the-icons-ivy
+  :after all-the-icons
+  :demand t
+  :config
+  (all-the-icons-ivy-setup))
 
 ;; smex order selections accordingly to the most used ones
 (use-package smex :after swiper)
@@ -1735,6 +1751,8 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
   :config
   (validate-setq
    ;;ls-lisp-dirs-first t
+   ;; this is only for macOS - FIXME
+   insert-directory-program "gls" dired-use-ls-dired t
    dired-listing-switches
    "-lhFG1v --group-directories-first"  ; add ls switches
 
@@ -2400,8 +2418,15 @@ SSH_AUTH_PID variables.
 
 ;; Define a pretty prompt.
 (use-package eshell-git-prompt
+  :demand t
   :config
   (eshell-git-prompt-use-theme 'powerline))
+
+(add-hook 'eshell-mode-hook
+          (lambda ()
+            (define-key eshell-mode-map
+              (kbd "<tab>") 'completion-at-point)))
+
 
 ;; Like Plan-9 shell
 (use-package em-smart
@@ -2538,8 +2563,9 @@ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-setti
                            :height 90))
       ((system-is-mac)
        (set-face-attribute 'default nil
-                           :family "Source Code Pro for Powerline"
-                           :height 110)))
+                           ;;:family "Source Code Pro for Powerline"
+                           :family "Monaco"
+                           :height 100)))
 
 ;; Set a smaller font for the mode line
 (set-face-attribute 'mode-line nil
