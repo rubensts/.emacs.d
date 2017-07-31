@@ -2564,7 +2564,7 @@ instead, check [[https://github.com/bbatsov/solarized-emacs#theme-specific-setti
       ((system-is-mac)
        (set-face-attribute 'default nil
                            ;;:family "Source Code Pro for Powerline"
-                           :family "Monaco"
+                           :family "Fira Code Retina"
                            :height 100)))
 
 ;; Set a smaller font for the mode line
@@ -2640,8 +2640,15 @@ for minor modes, which makes the configuration simpler.
   :config
   (spaceline-spacemacs-theme))
 
-(use-package spaceline-all-the-icons
-  :disabled t
-  :after spaceline
-  :config (spaceline-all-the-icons-theme))
+;;(use-package spaceline-all-the-icons
+;;  :demand t
+;;  :after spaceline
+;;  :config
+;;  (spaceline-all-the-icons--setup-anzu)            ;; Enable anzu searching
+;;  (spaceline-all-the-icons--setup-package-updates) ;; Enable package update indicator
+;;  (spaceline-all-the-icons--setup-git-ahead)       ;; Enable # of commits ahead of upstream in git
+;;  (spaceline-all-the-icons--setup-paradox)         ;; Enable Paradox mode line
+;;  (spaceline-all-the-icons--setup-neotree)         ;; Enable Neotree mode line
+;;  (spaceline-all-the-icons-theme)
+;;  )
 #+END_SRC
