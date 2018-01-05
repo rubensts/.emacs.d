@@ -40,19 +40,18 @@ ones you will really use and/or adapt it to the ones you prefer.
 
 ** Source of Ideas
 
-The inspiration for handling the Emacs configuration through [[http://orgmode.org/worg/org-contrib/babel/intro.html#literate-programming][Literate
-Programming]] came from [[http://eschulte.github.io/emacs24-starter-kit/][Eric Schulte's emacs24-starter-kit]]. It is a really clever
-concept that, among other things, keeps your Emacs configuration tidy and well
-organized.
+The inspiration for handling the Emacs configuration through [[http://orgmode.org/worg/org-contrib/babel/intro.html#literate-programming][Literate Programming]] came
+from [[http://eschulte.github.io/emacs24-starter-kit/][Eric Schulte's emacs24-starter-kit]]. It is a really clever concept that, among other
+things, keeps your Emacs configuration tidy and well organized.
 
-The first time I saw it being handled by a single org-mode file was on [[https://github.com/sachac/.emacs.d/blob/gh-pages/Sacha.org][Sacha
-Chua's config.]] Then I came across [[https://github.com/joedicastro/dotfiles/tree/master/emacs/.emacs.d][joe di castro's emacs.d on github]], where he
-automatically generates the =~/.emacs.d/init.el= directly from his =readme.org=
-file. This is the solution I'm using here.
+The first time I saw it being handled by a single org-mode file was on [[https://github.com/sachac/.emacs.d/blob/gh-pages/Sacha.org][Sacha Chua's
+config.]] Then I came across [[https://github.com/joedicastro/dotfiles/tree/master/emacs/.emacs.d][joe di castro's emacs.d on github]], where he automatically
+generates the =~/.emacs.d/init.el= directly from his =readme.org= file. This is the solution
+I'm using here.
 
-A list of Emacs Jedis, from whon I took most of the solutions applied here.
-Their ~github~ pages have many interesting/clever ideas to inspire you. Also
-make sure to check their blogs as well...cool stuff:
+A list of Emacs Jedis, from whon I took most of the solutions applied here. Their ~github~
+pages have many interesting/clever ideas to inspire you. Also make sure to check their
+blogs as well...cool stuff:
 
 - [[https://github.com/sachac/.emacs.d/blob/gh-pages/Sacha.org][Sacha Chua]]
 - [[https://github.com/joedicastro/dotfiles/tree/master/emacs][joedicastro]]
@@ -99,11 +98,11 @@ changes made in =~/.emacs.d/emacs-init.el= will be overwritten when =readme.org=
     (byte-recompile-directory (expand-file-name user-emacs-directory) 0)))
 
 (add-hook 'after-save-hook 'my/tangle-init)
-(add-hook 'kill-emacs-hook 'my/tangle-init)
+;;(add-hook 'kill-emacs-hook 'my/tangle-init)
 #+END_SRC
 
 To save startup time, my ~init.el~ file (first file that is opened when Emacs is launched)
-tries to load ~emacs-init.el~ and, in case it doesn't exist yet, loads this ~readme.org~ file.
+tries to load ~emacs-init.el~ and, in case it doesn't yet exist, loads this ~readme.org~ file.
 
 * Built-in Capabilities
 ** OS compatibility
@@ -204,8 +203,7 @@ file, avoiding cluttering it.
                confirm-kill-emacs 'y-or-n-p    ; ask for confirmation to close Emacs
                auto-revert-verbose nil         ; turn off auto revert messages in the minibuffer
                size-indication-mode t          ; displays the buffer size in the modeline
-               show-paren-delay 0.0            ; set delay to 0 for showing matching parens
-               )
+               show-paren-delay 0.0)           ; set delay to 0 for showing matching parens
 
 (setq apropos-do-all t)                        ; perform more extensive searches than default
 
@@ -569,9 +567,9 @@ I'm start managing my keybindings through General.
 
 * Main packages
 
-To automatized package installation I've started using ~use-package~, which gives a
-concise and powerful way to organize Emacs configuration avoiding the terrible
-"config bankruptcy".
+To automatized package installation I've started using ~use-package~, which gives a concise
+and powerful way to organize Emacs configuration avoiding the terrible "config
+bankruptcy".
 
 ** evil
 
@@ -751,58 +749,74 @@ The tip for the ~org-babel~ keybindings was seen at [[https://www.wisdomandwonde
 
 *** org-capture-templates
 
+The ~Protocol Quote (p)~ and ~Protocol Link (L)~ templates work through the use of the [[http://orgmode.org/worg/org-contrib/org-protocol.html][org protocol]]
+handler [[https://github.com/sprig/org-capture-extension][found here]], which is a Chrome/Firefox addon.
+
+Specifically, the ~Protocol Quote~ is activated when a text is selected in the site, capturing
+the text selected (quote). The ~Protocol Link~ works when no text is selected, capturing only
+the site address.
+
+Here is a list of the special %-escapes or placeholders used on [[http://orgmode.org/manual/Template-expansion.html#Template-expansion][org templates]].
+
 #+BEGIN_SRC emacs-lisp
-  (use-package org-protocol
-    :demand t
-    :config
-    ;; Define capture templates
-    (setq org-capture-templates
-          '(("w" "Web bookmarks" entry
-             (file+headline "www.org" "Bookmarks")
-             "* %?%c %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%i\n"
-             :empty-lines 1
-             :immediate-finish)
+(use-package org-protocol
+  :demand t
+  :config
+  (setq org-capture-templates
+        '(("p" "Protocol Quote" entry
+           (file+headline "www.org" "Bookmarks")
+           "* %?[[%:link][%:description]]\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n#+BEGIN_QUOTE\n%i\n#+END_QUOTE\n"
+           :empty-lines 1
+           :immediate-finish
+           )
 
-            ("t" "Tasks" entry
-             (file+headline "tasks.org" "Tasks")
-             "* ☛ TODO %^{Task} %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?%i"
-             :empty-lines 1)
+          ("L" "Protocol Link" entry
+           (file+headline "www.org" "Bookmarks")
+           "* %?[[%:link][%:description]]\n:PROPERTIES:\n:CREATED: %U\n:END:\n"
+           :empty-lines 1
+           :immediate-finish
+           )
 
-            ("n" "Notes" entry
-             (file+headline "notes.org" "Notes")
-             "* %^{Header} %^G\n %u\n %?")
+          ("t" "Tasks" entry
+           (file+headline "tasks.org" "Tasks")
+           "* ☛ TODO %^{Task} %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?%i"
+           :empty-lines 1)
 
-            ("j" "Journal" entry
-             (file+datetree "journal.org")
-             "* %U %^{Title}\n %?%i\n %a")
+          ("n" "Notes" entry
+           (file+headline "notes.org" "Notes")
+           "* %^{Header} %^G\n %u\n %?")
 
-            ("a" "Articles" entry
-             (file+headline "articles.org" "Articles")
-             "* %^{Title} %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?%i\n"
-             :empty-lines 1
-             :immediate-finish)
+          ("j" "Journal" entry
+           (file+datetree "journal.org")
+           "* %U %^{Title}\n %?%i\n %a")
 
-            ("r" "Redmine" entry
-             (file+datetree "clockin.org")
-             "* [[https://redmine.2ndquadrant.it/issues/%^{Ticket}][%^{Description}]] :redmine:%^g\n%?"
-             :clock-in t
-             :clock-keep t
-             :empty-lines 1)
+          ("a" "Articles" entry
+           (file+headline "articles.org" "Articles")
+           "* %^{Title} %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?%i\n"
+           :empty-lines 1
+           :immediate-finish)
 
-            ("s" "RT - Support" entry
-             (file+datetree "clockin.org")
-             "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :support:%^g\n%?"
-             :clock-in t
-             :clock-keep t
-             :empty-lines 1)
+          ("r" "Redmine" entry
+           (file+datetree "clockin.org")
+           "* [[https://redmine.2ndquadrant.it/issues/%^{Ticket}][%^{Description}]] :redmine:%^g\n%?"
+           :clock-in t
+           :clock-keep t
+           :empty-lines 1)
 
-            ("b" "RT - RDBA" entry
-             (file+datetree "clockin.org")
-             "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :rdba:%^g\n%?"
-             :clock-in t
-             :clock-keep t
-             :empty-lines 1)
-            )))
+          ("s" "RT - Support" entry
+           (file+datetree "clockin.org")
+           "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :support:%^g\n%?"
+           :clock-in t
+           :clock-keep t
+           :empty-lines 1)
+
+          ("b" "RT - RDBA" entry
+           (file+datetree "clockin.org")
+           "* [[https://support.2ndquadrant.com/rt/Ticket/Display.html?id=%^{Ticket}][%^{Description}]] :rdba:%^g\n%?"
+           :clock-in t
+           :clock-keep t
+           :empty-lines 1)
+          )))
 #+END_SRC
 
 *** org-bullets
@@ -1151,11 +1165,6 @@ idea.
 
 #+BEGIN_SRC emacs-lisp
 (use-package avy
-  :bind (("C-:" . avy-goto-char)
-         ("C-'" . avy-goto-char-2)
-         ("M-g f" . avy-goto-line)
-         ("M-g w" . avy-goto-word-1)
-         ("M-g e" . avy-goto-word-0))
   :config
   (setq avy-background t
         avy-all-windows t
@@ -1500,15 +1509,6 @@ that runs proselint in texty buffers and displays the errors.
 (use-package graphviz-dot-mode)
 #+END_SRC
 
-** neotree
-
-#+BEGIN_SRC emacs-lisp
-(use-package neotree
-  :bind (("<f6>" . neotree-toggle))
-  :config
-  (validate-setq neo-theme (if window-system 'icons 'arrow)))
-#+END_SRC
-
 ** page-break-lines
 
 Better looking break lines.
@@ -1624,10 +1624,10 @@ Use ripgrep in Emacs.
 (use-package shackle
   :demand t
   :config
-  (validate-setq shackle-default-alignment 'below
-                 shackle-default-size 8
-                 shackle-rules
-                 '(("^\\*ftp " :noselect t :autokill t :noesc t)
+  (validate-setq
+   shackle-default-alignment 'below
+   shackle-default-size 8
+   shackle-rules '(("^\\*ftp " :noselect t :autokill t :noesc t)
                    ;; built-in (emacs)
                    ("*ert*" :same t :modeline t)
                    ("*info*" :size 0.5 :select t :autokill t)
@@ -2238,7 +2238,7 @@ German, Polish, and more than 20 other languages.
           langtool-language-tool-jar "/usr/share/java/languagetool/languagetool-commandline.jar"))
         ((system-is-mac)
          (validate-setq
-          langtool-language-tool-jar "/usr/local/Cellar/languagetool/3.8/libexec/languagetool-commandline.jar")))
+          langtool-language-tool-jar "/usr/local/Cellar/languagetool/3.9/libexec/languagetool-commandline.jar")))
 
   (validate-setq langtool-java-bin "/usr/bin/java"
                  langtool-mother-tongue "en")
@@ -2600,6 +2600,8 @@ There are many beautiful fonts that can be selected here. As I prefer to enjoy a
 power of Emacs GUI (we aren't in the 70's anymore, are we? ;)) I keep between ~Source Code
 Pro~ and ~Fira Code~.
 
+If you want to try using font ligatures, check [[https://github.com/tonsky/FiraCode/wiki/Setting-up-Emacs][here for Fira Code instructions]].
+
 #+BEGIN_SRC emacs-lisp
 (cond ((system-is-linux)
        (set-face-attribute 'default nil
@@ -2609,40 +2611,7 @@ Pro~ and ~Fira Code~.
        (set-face-attribute 'default nil
                            :family "Fira Code Retina"
                            :height 100)
-
-       ;; Use font ligatures
-       ;;https://github.com/tonsky/FiraCode/wiki/Setting-up-Emacs
-;;       (let ((alist '((33 . ".\\(?:\\(?:==\\|!!\\)\\|[!=]\\)")
-;;                      (35 . ".\\(?:###\\|##\\|_(\\|[#(?[_{]\\)")
-;;                      (36 . ".\\(?:>\\)")
-;;                      (37 . ".\\(?:\\(?:%%\\)\\|%\\)")
-;;                      (38 . ".\\(?:\\(?:&&\\)\\|&\\)")
-;;                      (42 . ".\\(?:\\(?:\\*\\*/\\)\\|\\(?:\\*[*/]\\)\\|[*/>]\\)")
-;;                      (43 . ".\\(?:\\(?:\\+\\+\\)\\|[+>]\\)")
-;;                      (45 . ".\\(?:\\(?:-[>-]\\|<<\\|>>\\)\\|[<>}~-]\\)")
-;;                      (46 . ".\\(?:\\(?:\\.[.<]\\)\\|[.=-]\\)")
-;;                      (47 . ".\\(?:\\(?:\\*\\*\\|//\\|==\\)\\|[*/=>]\\)")
-;;                      (48 . ".\\(?:x[a-zA-Z]\\)")
-;;                      (58 . ".\\(?:::\\|[:=]\\)")
-;;                      (59 . ".\\(?:;;\\|;\\)")
-;;                      (60 . ".\\(?:\\(?:!--\\)\\|\\(?:~~\\|->\\|\\$>\\|\\*>\\|\\+>\\|--\\|<[<=-]\\|=[<=>]\\||>\\)\\|[*$+~/<=>|-]\\)")
-;;                      (61 . ".\\(?:\\(?:/=\\|:=\\|<<\\|=[=>]\\|>>\\)\\|[<=>~]\\)")
-;;                      (62 . ".\\(?:\\(?:=>\\|>[=>-]\\)\\|[=>-]\\)")
-;;                      (63 . ".\\(?:\\(\\?\\?\\)\\|[:=?]\\)")
-;;                      (91 . ".\\(?:]\\)")
-;;                      (92 . ".\\(?:\\(?:\\\\\\\\\\)\\|\\\\\\)")
-;;                      (94 . ".\\(?:=\\)")
-;;                      (119 . ".\\(?:ww\\)")
-;;                      (123 . ".\\(?:-\\)")
-;;                      (124 . ".\\(?:\\(?:|[=|]\\)\\|[=>|]\\)")
-;;                      (126 . ".\\(?:~>\\|~~\\|[>=@~-]\\)")
-;;                      )
-;;                    ))
-;;         (dolist (char-regexp alist)
-;;           (set-char-table-range composition-function-table (car char-regexp)
-;;                                 `([,(cdr char-regexp) 0 font-shape-gstring]))))
-       )
-      )
+       ))
 
 ;; Set a smaller font for the mode line
 ;;(set-face-attribute 'mode-line nil
@@ -2654,7 +2623,7 @@ Pro~ and ~Fira Code~.
 ;; Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
 (set-fontset-font "fontset-default" nil
                   (font-spec :size 100 :name "Fontawesome"))
-                  ;;(font-spec :size 20 :name "Symbola"))
+;;(font-spec :size 20 :name "Symbola"))
 #+END_SRC
 
 ** Themes
@@ -2679,11 +2648,6 @@ a little too big for someone's taste. Of course, as this is Emacs, they can be a
 Check the changes required for the [[https://gist.github.com/rubensts/a0d8786a633bd2aa8eacd1ea9f52a694][material-theme]] and, also, for the [[https://github.com/bbatsov/solarized-emacs#theme-specific-settings][solarized-theme]].
 
 #+BEGIN_SRC emacs-lisp
-;;(use-package spacemacs-theme
-;;  :disabled t
-;;  :init
-;;  (load-theme 'spacemacs-dark t))
-
 (use-package doom-themes
   :init
   (load-theme 'doom-one t)
@@ -2744,7 +2708,6 @@ for minor modes, which makes the configuration simpler.
 
 (use-package spaceline-all-the-icons
   :demand t
-  :after spaceline
   :config
   (spaceline-all-the-icons--setup-anzu)            ;; Enable anzu searching
   (spaceline-all-the-icons--setup-package-updates) ;; Enable package update indicator
