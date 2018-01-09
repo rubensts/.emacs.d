@@ -1,7 +1,7 @@
 #+TITLE:     My Emacs Configuration
 #+AUTHOR:    Rubens.TS
 #+EMAIL:     rubensts@gmail.com
-#+DATE:      2017-05-03
+#+DATE:      2018-01-07
 #+LANGUAGE:  en
 #+PROPERTY: header-args :tangle emacs-init.el :comments org
 #+OPTIONS: author:nil date:nil toc:2 title:nil e:nil
@@ -95,7 +95,9 @@ changes made in =~/.emacs.d/emacs-init.el= will be overwritten when =readme.org=
   (when (equal (buffer-name)
                (concat "readme.org"))
     (org-babel-tangle)
-    (byte-recompile-directory (expand-file-name user-emacs-directory) 0)))
+    ;; byte compile the .emacs.d directory
+    ;;(byte-recompile-directory (expand-file-name user-emacs-directory) 0)
+    ))
 
 (add-hook 'after-save-hook 'my/tangle-init)
 ;;(add-hook 'kill-emacs-hook 'my/tangle-init)
@@ -124,11 +126,11 @@ tries to load ~emacs-init.el~ and, in case it doesn't yet exist, loads this ~rea
 Save the custom settings to a separated file, instead of inside the ~init.el~
 file, avoiding cluttering it.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (defconst rts-custom-file (locate-user-emacs-file "custom.el")
   "File used to store settings from Customization UI.")
 
-(use-package cus-edit
+(use-package cus-edit+
   :init (load rts-custom-file 'no-error 'no-message)
   :config
   (setq custom-file rts-custom-file
@@ -143,42 +145,35 @@ file, avoiding cluttering it.
  Set better defaults do Emacs. Some of the preferences here were taken from
  [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]].
 
- #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; Fullscreen
-(cond ((system-is-mac) (toggle-frame-maximized))
+(cond ((system-is-mac) (toggle-frame-fullscreen))
       ((system-is-linux) (add-to-list 'default-frame-alist
                                       '(fullscreen . maximized))))
 
-;; disable menu, tool-bar and scroll-bar
-(when (window-system)
-  (menu-bar-mode -1)
-  (tool-bar-mode -1)
+;; better defaults
+(menu-bar-mode -1)
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode)
   (scroll-bar-mode -1))
+(when (fboundp 'horizontal-scroll-bar-mode)
+  (horizontal-scroll-bar-mode -1))
 
-;; set scratch buffer to org and show fortune
-(setq initial-major-mode 'org-mode)
-(setq initial-scratch-message
-      (format
-       ";; %s\n\n"
-       (replace-regexp-in-string
-        "\n" "\n;; " ; comment each line
-        (replace-regexp-in-string
-         "\n$" ""    ; remove trailing linebreak
-         (shell-command-to-string "fortune -a")))))
-
+;;(global-set-key (kbd "M-/") 'hippie-expand)
+;;(global-set-key (kbd "C-x C-b") 'ibuffer)
 
 (fset 'yes-or-no-p 'y-or-n-p)                  ; ask `y/n?` instead of `yes/no?`
 (transient-mark-mode t)                        ; apply changes to highlighted region
 (delete-selection-mode t)                      ; overwrite selected text when typing
-(blink-cursor-mode -1)                         ; turn of the blinking cursor
-;;(fringe-mode '(1 . 1))                       ; thinner window divisions
+(blink-cursor-mode -1)                         ; turn off the blinking cursor
+(global-font-lock-mode t)                      ; always highlight code
+(global-auto-revert-mode t)                    ; refresh buffers when files change
 (global-hl-line-mode 1)                        ; highlight the current line
 (global-visual-line-mode t)                    ; break long line of text
 (global-prettify-symbols-mode 1)               ; prettify symbols (lambdas, etc)
-(global-font-lock-mode t)                      ; always highlight code
-(global-auto-revert-mode t)                    ; refresh buffers when files change
 (column-number-mode t)                         ; shows column number on the modeline
-(save-place-mode 1)                            ; save cursor position for opened files
+(save-place-mode t)                            ; save cursor position for opened files
 (show-paren-mode t)                            ; show matching parentheses
 
 (defalias 'list-buffers 'ibuffer)              ; use ibuffer by default
@@ -191,27 +186,31 @@ file, avoiding cluttering it.
 (prefer-coding-system        'utf-8)
 (set-input-method nil)
 
-(validate-setq inhibit-startup-message t       ; don't show startup message
+(validate-setq load-prefer-newer t             ; avoid using outdated compiled files
+               inhibit-default-init t          ; don't call default.el (default settings) after init.el
+               inhibit-startup-message t       ; don't show startup message
+               initial-major-mode 'org-mode    ; set scratch buffer automatically to org-mode
+               initial-scratch-message nil     ; clear the inital message on the scratch buffer
+
                mouse-yank-at-point t           ; paste from clipboard to where point is on buffer
                echo-keystrokes 0.1             ; shows keystrokes in progress
                use-dialog-box nil              ; don't use dialog when using mouse click
                line-spacing '0.10              ; line height
-               default-directory "~/"          ; when opening files search from home directory
-               vc-follow-symlinks t            ; when opening files follow symlinks
-               sentence-end-double-space nil   ; sentences don't need to have two spaces after periods
+               ;;auto-revert-verbose nil         ; turn off auto revert messages in the minibuffer
+               default-directory "~/"          ; start searching from home directory when opening files
+               vc-follow-symlinks t            ; when opening a file, always follow symlinks
+               sentence-end-double-space nil   ; a sentence shouldn't have two spaces after period
                require-final-newline t         ; ensure files end with newline
                confirm-kill-emacs 'y-or-n-p    ; ask for confirmation to close Emacs
                auto-revert-verbose nil         ; turn off auto revert messages in the minibuffer
-               size-indication-mode t          ; displays the buffer size in the modeline
-               show-paren-delay 0.0)           ; set delay to 0 for showing matching parens
+               ;;size-indication-mode t          ; displays the buffer size in the modeline
+               show-paren-delay 0.0            ; set delay to 0 for showing matching parens
+               save-interprogram-paste-before-kill t)
 
-(setq apropos-do-all t)                        ; perform more extensive searches than default
-
+(setq apropos-do-all t)                ; perform more extensive searches than default
 (setq-default indicate-empty-lines t)          ; show empty lines at bottom of buffer
-(when (not indicate-empty-lines)
-  (toggle-indicate-empty-lines))
 
-(setq-default indent-tabs-mode  nil            ; always indent with spaces
+(setq-default indent-tabs-mode nil             ; always indent with spaces
               default-tab-width 4
               c-basic-offset 4
               fill-column 90)                  ; set default line length
@@ -222,17 +221,14 @@ file, avoiding cluttering it.
         (invert-face 'mode-line)
         (run-with-timer 0.1 nil
                         'invert-face 'mode-line)))
-
-;; browser settings
-;;(setq browse-url-browser-function 'browse-url-generic
-;;      browse-url-generic-program "firefox")
-
-;; hooks
+;;; hooks
 (add-hook 'before-save-hook 'delete-trailing-whitespace)  ; delete trailing whitespace when buffer is saved
 (add-hook 'prog-mode-hook 'subword-mode)                  ; treat CamelCaseSubWords as separate words
+
+;; when saving a file that starts with `#!', make it executable
 (add-hook 'after-save-hook
-          'executable-make-buffer-file-executable-if-script-p)  ; when file starts with `#!` make it executable
- #+END_SRC
+          'executable-make-buffer-file-executable-if-script-p)
+#+END_SRC
 
 ** MacOS specifics
 
@@ -252,7 +248,8 @@ The function ~my/swap-meta-and-super~ was taken from [[https://github.com/bbatso
     (exec-path-from-shell-initialize)))
 
 (when (system-is-mac)
-  (setq ns-function-modifier 'hyper) ; it's all in the Meta
+  (setq ns-function-modifier 'hyper ; it's all in the Meta
+        ns-pop-up-frames nil)       ; open file on current buffer when double-clicking it on Mac Finder
 
   (defun my/swap-meta-and-super ()
     "Swap the mapping of Meta and Super.
@@ -317,10 +314,8 @@ Let Emacs know about holidays of the location.
 Maintain a history of past actions and a reasonable number of lists.
 
 #+BEGIN_SRC emacs-lisp
-(setq-default history-length 1000)
-;;(setq savehist-file (concat
-;;                     tmp-directory "history")
-(setq-default history-delete-duplicates t
+(setq-default history-length 1000
+              history-delete-duplicates t
               savehist-save-minibuffer-history 1
               savehist-additional-variables '(kill-ring
                                               search-ring
@@ -418,25 +413,6 @@ kill. Very good tip taken from [[http://pragmaticemacs.com/emacs/dont-kill-buffe
   (global-set-key (kbd "<f5>") 'my/copy-id-to-clipboard)
 #+END_SRC
 
-*** Comment region or line
-
-Copied from [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]].
-
-#+BEGIN_SRC emacs-lisp
-(defun sensible-defaults/comment-or-uncomment-region-or-line ()
-  "Comments or uncomments the region or the current line if
-there's no active region."
-  (interactive)
-  (let (beg end)
-    (if (region-active-p)
-        (setq beg (region-beginning) end (region-end))
-      (setq beg (line-beginning-position) end (line-end-position)))
-    (comment-or-uncomment-region beg end)))
-
-(global-set-key (kbd "M-;")
-                'sensible-defaults/comment-or-uncomment-region-or-line)
-#+END_SRC
-
 *** Create parent directories when saving file
 
 Copied from [[https://github.com/hrs/sensible-defaults.el][sensible-defaults.el]].
@@ -453,7 +429,6 @@ to (recursively) create the file's parent directories."
                              (y-or-n-p (format "Directory %s does not exist. Create it?" dir)))
                     (make-directory dir t)))))))
 #+END_SRC
-
 * Keybindings
 
 I'm start managing my keybindings through General.
@@ -735,6 +710,7 @@ The tip for the ~org-babel~ keybindings was seen at [[https://www.wisdomandwonde
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-clock
+  :straight nil
   :demand t
   :config
   (org-clock-persistence-insinuate)           ; resume clocking task when emacs is restarted
@@ -749,17 +725,18 @@ The tip for the ~org-babel~ keybindings was seen at [[https://www.wisdomandwonde
 
 *** org-capture-templates
 
-The ~Protocol Quote (p)~ and ~Protocol Link (L)~ templates work through the use of the [[http://orgmode.org/worg/org-contrib/org-protocol.html][org protocol]]
-handler [[https://github.com/sprig/org-capture-extension][found here]], which is a Chrome/Firefox addon.
+The ~Protocol Quote (p)~ and ~Protocol Link (L)~ templates work through the use of the [[http://orgmode.org/worg/org-contrib/org-protocol.html][org
+protocol]] handler [[https://github.com/sprig/org-capture-extension][found here]], which is a Chrome/Firefox addon.
 
-Specifically, the ~Protocol Quote~ is activated when a text is selected in the site, capturing
-the text selected (quote). The ~Protocol Link~ works when no text is selected, capturing only
-the site address.
+Specifically, the ~Protocol Quote~ is activated when a text is selected in the site,
+capturing the text selected (quote). The ~Protocol Link~ works when no text is selected,
+capturing only the site address.
 
 Here is a list of the special %-escapes or placeholders used on [[http://orgmode.org/manual/Template-expansion.html#Template-expansion][org templates]].
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-protocol
+  :straight nil
   :demand t
   :config
   (setq org-capture-templates
@@ -843,6 +820,7 @@ Here is a list of the special %-escapes or placeholders used on [[http://orgmode
 
 #+BEGIN_SRC emacs-lisp
 (use-package ox
+  :straight nil
   :config
   (validate-setq org-export-with-smart-quotes t))
 #+END_SRC
@@ -887,6 +865,7 @@ Babel is Org-mode’s ability to execute source code within Org-mode documents.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ob
+  :straight nil
   :config
   (org-babel-do-load-languages
    (quote org-babel-load-languages)
@@ -1326,7 +1305,7 @@ The following keys modify the selection:
          ([remap mark-sexp] . easy-mark)))
 #+END_SRC
 
-** ediff (FIXME)
+** ediff
 
 The default ~ediff-mode~ isn't quite optimized. The following settings are taken
 from [[http://oremacs.com/2015/01/17/setting-up-ediff/][Oremacs]].
@@ -1361,16 +1340,15 @@ sees unicode encoded files as binary files ([[http://stackoverflow.com/questions
   ;;;###autoload
   (defun ora-diff-hook ())
 
-  (mapc
-   (lambda (k)
-     (define-key diff-mode-map k
-       `(lambda () (interactive)
-          (if (region-active-p)
-              (replace-regexp "^." ,k nil
-                              (region-beginning)
-                              (region-end))
-            (insert ,k)))))
-   (list " " "-" "+"))
+  (mapc (lambda (k)
+          (define-key diff-mode-map k
+            `(lambda () (interactive)
+               (if (region-active-p)
+                   (replace-regexp "^." ,k nil
+                                   (region-beginning)
+                                   (region-end))
+                 (insert ,k)))))
+        (list " " "-" "+"))
   )
 #+END_SRC
 
@@ -1519,22 +1497,6 @@ Better looking break lines.
   :init (global-page-break-lines-mode))
 #+END_SRC
 
-** paradox
-Project for modernizing Emacs’ Package Menu. With package ratings, usage
-statistics, customizability, and more.
-
-#+BEGIN_SRC emacs-lisp
-(use-package paradox
-  :config
-  (setq-default paradox-column-width-package 27
-                paradox-column-width-version 13
-                paradox-execute-asynchronously t
-                paradox-github-token t
-                paradox-hide-wiki-packages t)
-  (set-face-attribute 'paradox-homepage-button-face nil :italic nil)
-  (remove-hook 'paradox--report-buffer-print 'paradox-after-execute-functions))
-#+END_SRC
-
 ** pass
 
 #+BEGIN_SRC emacs-lisp
@@ -1597,17 +1559,20 @@ Recentf is a minor mode that builds a list of recently opened files. This list
 is automatically saved across Emacs sessions. You can access the list through a
 menu. Here it's set to work together with ivy-switch-buffer.
 
-[[https://github.com/abo-abo/swiper/releases][source 1]] - [[https://www.masteringemacs.org/article/find-files-faster-recent-files-package][source 2]] - [[http://emacsredux.com/blog/2013/04/05/recently-visited-files/][source 3]]
+[[https://github.com/abo-abo/swiper/releases][source 1]] - [[https://www.masteringemacs.org/article/find-files-faster-recent-files-package][source 2]] - [[http://emacsredux.com/blog/2013/04/05/recently-visited-files/][source 3]] - [[https://github.com/emacscollective/no-littering#suggested-settings][source 4]]
 
 #+BEGIN_SRC emacs-lisp
 (use-package recentf
   :config
   (recentf-mode t)
-  (validate-setq recentf-max-saved-items 10
-                 recentf-exclude '("COMMIT_MSG"
-                                   "COMMIT_EDITMSG"
-                                   "github.*txt$"
-                                   ".*png$")))
+  (validate-setq recentf-max-saved-items 10)
+
+  (add-to-list 'recentf-exclude no-littering-var-directory)
+  (add-to-list 'recentf-exclude no-littering-etc-directory)
+  (add-to-list 'recentf-exclude '("COMMIT_MSG"
+                                  "COMMIT_EDITMSG"
+                                  "github.*txt$"
+                                  ".*png$")))
 #+END_SRC
 
 ** ripgrep
@@ -1651,10 +1616,13 @@ Use ripgrep in Emacs.
 
 ** uniquify
 
-Nicer naming of buffers for files with identical names. [[https://github.com/purcell/emacs.d/blob/master/lisp/init-uniquify.el][source]]
+Nicer naming of buffers for files with identical names. Check [[https://github.com/purcell/emacs.d/blob/master/lisp/init-uniquify.el][Steve
+Purcell's setup]]. Actually, his whole Emacs setup is doubtless worthy
+looking.
 
 #+BEGIN_SRC emacs-lisp
 (use-package uniquify
+  :straight nil
   :config
   (setq uniquify-buffer-name-style 'reverse
         uniquify-separator " • "
@@ -1670,6 +1638,7 @@ S-C-/ redo
 
 #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
+  :straight nil
   :delight undo-tree-mode nil undo-tree
   :init
   (global-undo-tree-mode))
@@ -1812,6 +1781,7 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
+  :straight nil
   :config
   (validate-setq
    ;;ls-lisp-dirs-first t
@@ -1836,13 +1806,16 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
   )
 
 ;; Built into Emacs, it provides chgrp, chown, chmod and other functionalities
-(use-package dired-aux)
+(use-package dired-aux
+  :straight nil)
+
 #+END_SRC
 
 *** dired-x
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-x
+  :straight nil
   :demand t
   :bind ("C-x C-j" . dired-jump)
   :config
@@ -1882,6 +1855,7 @@ Use async in everything in dired.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-async
+  :straight nil
   :after async
   :demand t
   :config
@@ -1912,6 +1886,7 @@ cool.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-narrow
+  :straight nil
   :bind (:map dired-mode-map
               ("/" . dired-narrow)))
 #+END_SRC
@@ -1930,6 +1905,7 @@ browsing directory in dired.
 
 #+BEGIN_SRC emacs-lisp
 (use-package peep-dired
+  :straight nil
   :bind (:map dired-mode-map
               ("P" . peep-dired))
   :config
@@ -1940,6 +1916,7 @@ browsing directory in dired.
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons-dired
+  :straight nil
   :after all-the-icons
   :init
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
@@ -2307,6 +2284,7 @@ words. [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-w
 
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens-config
+  :straight nil
   :delight smartparens-strict-mode " Ⓢ" smartparens
   :config
   (show-smartparens-global-mode t))
@@ -2411,8 +2389,10 @@ I am configuring it for PostgreSQL, of course.
 
 [[https://github.com/Trevoke/sqlup-mode.el][sqlup-mode]] is a minor mode to upcase SQL keyword and functions.
 
+[[https://github.com/alex-hhh/emacs-sql-indent][sql-indent]] is a syntax based indentation for SQL files inside GNU Emacs.
+
 #+BEGIN_SRC emacs-lisp
-;; Make SQLi default to PostgreSQL syntax highlighting
+;; Make SQLi default to PostgreSQL syntax highlighti
 ;; https://blogs.gentoo.org/titanofold/2011/05/17/postgresql-syntax-highlighting-in-emacs/
 (eval-after-load "sql"
   '(progn (sql-set-product 'postgres)))
@@ -2422,13 +2402,14 @@ I am configuring it for PostgreSQL, of course.
 (setq sql-postgres-login-params
       '((user :default "postgres")
         (database :default "postgres")
-        (server :default "localhost")
-        (port :default 5432)))
+        (server)))
 
 ;; Truncate lines to better visualize many columns tables
+;; Automatically renames the *SQL* buffer to *SQL user/database*
 (add-hook 'sql-interactive-mode-hook
           (lambda ()
-            (toggle-truncate-lines t)))
+            (toggle-truncate-lines t)
+            (sql-rename-buffer)))
 
 (use-package sqlup-mode
   :bind (("C-c u" . sqlup-capitalize-keywords-in-region))
@@ -2437,8 +2418,11 @@ I am configuring it for PostgreSQL, of course.
   (add-hook 'sql-interactive-mode-hook 'sqlup-mode))   ; and in an interactive session (e.g. psql)
 
 (use-package sql-indent
+  :straight (sql-indent :type git
+                        :host github
+                        :repo "alex-hhh/emacs-sql-indent")
   :config
-  (add-hook 'sql-mode-hook 'sqlind-setup))
+  (add-hook 'sql-mode-hook 'sqlind-minor-mode))
 #+END_SRC
 
 ** yaml
@@ -2493,6 +2477,7 @@ significant differences to address. To this end, I [[http://www.howardism.org/Te
 
 ;; Like Plan-9 shell
 (use-package em-smart
+  :straight nil
   :init
   (add-hook 'eshell-mode-hook 'eshell-smart-initialize)
   :config
@@ -2507,6 +2492,7 @@ significant differences to address. To this end, I [[http://www.howardism.org/Te
 
 #+BEGIN_SRC emacs-lisp
 (use-package better-shell
+  :straight nil
   :bind (("C-'" . better-shell-shell)
          ("C-;" . better-shell-remote-open)))
 #+END_SRC
@@ -2694,32 +2680,33 @@ for minor modes, which makes the configuration simpler.
 *** spaceline
 
 #+BEGIN_SRC emacs-lisp
-;;(use-package spaceline
-;;  :demand t
-;;  :config
-;;  (setq powerline-default-separator 'wave
-;;        spaceline-window-numbers-unicode t
-;;        spaceline-workspace-numbers-unicode t))
-;;
-;;(use-package spaceline-config
-;;  :demand t
-;;  :config
-;;  (spaceline-spacemacs-theme))
-
-(use-package spaceline-all-the-icons
+(use-package spaceline
   :demand t
   :config
-  (spaceline-all-the-icons--setup-anzu)            ;; Enable anzu searching
-  (spaceline-all-the-icons--setup-package-updates) ;; Enable package update indicator
-  (spaceline-all-the-icons--setup-git-ahead)       ;; Enable # of commits ahead of upstream in git
-  (spaceline-all-the-icons--setup-paradox)         ;; Enable Paradox mode line
-  (spaceline-all-the-icons--setup-neotree)         ;; Enable Neotree mode line
+  (setq powerline-default-separator 'wave
+        spaceline-window-numbers-unicode t
+        spaceline-workspace-numbers-unicode t))
 
-  ;; enable some segments that are disabled by default
-  (spaceline-toggle-all-the-icons-bookmark-on)        ; indicates if current file is bookmarked
-  (spaceline-toggle-all-the-icons-dedicated-on)       ; indicates if current file is dedicated
-  (spaceline-toggle-all-the-icons-narrowed-on)        ; indicates if current buffer has been narrowed
-  (spaceline-toggle-all-the-icons-buffer-position-on) ; position through the buffer as a percentage
-  (spaceline-all-the-icons-theme)
-  )
+(use-package spaceline-config
+  :straight nil
+  :demand t
+  :config
+  (spaceline-spacemacs-theme))
+
+;;(use-package spaceline-all-the-icons
+;;  :straight (spaceline-all-the-icons :type git
+;;                                     :host github
+;;                                     :repo "domtronn/spaceline-all-the-icons.el")
+;;  :demand t
+;;  :config
+;;  (spaceline-all-the-icons--setup-anzu)            ;; Enable anzu searching
+;;  (spaceline-all-the-icons--setup-git-ahead)       ;; Enable # of commits ahead of upstream in git
+;;
+;;  ;; enable some segments that are disabled by default
+;;  (spaceline-toggle-all-the-icons-bookmark-on)        ; indicates if current file is bookmarked
+;;  (spaceline-toggle-all-the-icons-dedicated-on)       ; indicates if current file is dedicated
+;;  (spaceline-toggle-all-the-icons-narrowed-on)        ; indicates if current buffer has been narrowed
+;;  (spaceline-toggle-all-the-icons-buffer-position-on) ; position through the buffer as a percentage
+;;  (spaceline-all-the-icons-theme)
+;;  )
 #+END_SRC
