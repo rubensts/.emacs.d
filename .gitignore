@@ -47,3 +47,4 @@ var
 tmp
 custom.el
 emacs-init.el
+straight/
