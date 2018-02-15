@@ -26,7 +26,7 @@ ones you will really use and/or adapt it to the ones you prefer.
 - [[https://git-scm.com/][git]] for version control, but if you are here you already know what is it ;)
 - [[https://notmuchmail.org/][notmuch]] for email (also a tool to fetch mail like [[http://isync.sourceforge.net/][mbsync]] or [[http://www.offlineimap.org/][OfflineImap]])
 - [[https://www.gnupg.org/][GnuPG]] for security, always
-- [[https://www.passwordstore.org/][pass]] to manage your passwords
+- [[https://www.passwordstore.org/][password-store]] to manage your passwords
 - [[https://www.latex-project.org/][LaTeX]] and [[http://pygments.org/][Pygments]] to PDF export with syntax highlighting
 - [[https://mupdf.com/][MuPDF]] for DocView, [[https://poppler.freedesktop.org/][poppler]] for pdf-tools
 - [[http://pandoc.org/][pandoc]] for [[https://github.com/kawabata/ox-pandoc][ox-pandoc]]
@@ -207,11 +207,11 @@ file, avoiding cluttering it.
                show-paren-delay 0.0            ; set delay to 0 for showing matching parens
                save-interprogram-paste-before-kill t)
 
-(setq apropos-do-all t)                ; perform more extensive searches than default
+(setq apropos-do-all t)                        ; perform more extensive searches than default
 (setq-default indicate-empty-lines t)          ; show empty lines at bottom of buffer
 
 (setq-default indent-tabs-mode nil             ; always indent with spaces
-              default-tab-width 4
+              default-tab-width 2
               c-basic-offset 4
               fill-column 90)                  ; set default line length
 
@@ -429,9 +429,10 @@ to (recursively) create the file's parent directories."
                              (y-or-n-p (format "Directory %s does not exist. Create it?" dir)))
                     (make-directory dir t)))))))
 #+END_SRC
+
 * Keybindings
 
-I'm start managing my keybindings through General.
+I've started managing my keybindings through [[https://github.com/noctuid/general.el][general.el]].
 
 #+BEGIN_SRC emacs-lisp
 (use-package general
@@ -473,16 +474,17 @@ I'm start managing my keybindings through General.
    "wj" 'windmove-right
 
    ;; eyebrowse - workspaces
-   "0" 'eyebrowse-switch-to-window-config-0
-   "1" 'eyebrowse-switch-to-window-config-1
-   "2" 'eyebrowse-switch-to-window-config-2
-   "3" 'eyebrowse-switch-to-window-config-3
-   "4" 'eyebrowse-switch-to-window-config-4
-   "5" 'eyebrowse-switch-to-window-config-5
-   "6" 'eyebrowse-switch-to-window-config-6
-   "7" 'eyebrowse-switch-to-window-config-7
-   "8" 'eyebrowse-switch-to-window-config-8
-   "9" 'eyebrowse-switch-to-window-config-9
+   "e" '(:ignore t :which-key "Workspaces")
+   "e0" '(eyebrowse-switch-to-window-config-0 :which-key "workspace 0")
+   "e1" '(eyebrowse-switch-to-window-config-1 :which-key "workspace 1")
+   "e2" '(eyebrowse-switch-to-window-config-2 :which-key "workspace 2")
+   "e3" '(eyebrowse-switch-to-window-config-3 :which-key "workspace 3")
+   "e4" '(eyebrowse-switch-to-window-config-4 :which-key "workspace 4")
+   "e5" '(eyebrowse-switch-to-window-config-5 :which-key "workspace 5")
+   "e6" '(eyebrowse-switch-to-window-config-6 :which-key "workspace 6")
+   "e7" '(eyebrowse-switch-to-window-config-7 :which-key "workspace 7")
+   "e8" '(eyebrowse-switch-to-window-config-8 :which-key "workspace 8")
+   "e9" '(eyebrowse-switch-to-window-config-9 :which-key "workspace 9")
 
    ;; files
    "f" '(:ignore t :which-key "Files")
@@ -499,10 +501,7 @@ I'm start managing my keybindings through General.
    "a" '(:ignore t :which-key "Applications")
    "ad" 'dired-jump
    "am" 'notmuch
-
-   ;; git
-   "g" '(:ignore t :which-key "GIT")
-   "gs" 'magit-status
+   "ag" 'magit-status
 
    ;; spelling
    "s" '(:ignore t :which-key "Spelling")
@@ -646,6 +645,7 @@ The tip for the ~org-babel~ keybindings was seen at [[https://www.wisdomandwonde
 
 #+BEGIN_SRC emacs-lisp
 (use-package org
+  :ensure org-plus-contrib
   :delight org-mode "Org"
   :bind  (("C-c a" . org-agenda-list)
           ("C-c c" . org-capture)
@@ -669,7 +669,7 @@ The tip for the ~org-babel~ keybindings was seen at [[https://www.wisdomandwonde
    org-hide-emphasis-markers t             ; hide markup elements, e.g. * *, / /, _ _
    org-cycle-include-plain-lists t
    org-list-allow-alphabetical t
-   org-latex-create-formula-image-program 'imagemagick   ; preview latex fragments
+   org-preview-latex-default-process 'imagemagick   ; preview latex fragments
 
    ;; Code blocks to play nicelly on org-babel
    org-edit-src-content-indentation 0      ; number of whitespaces added to the code block indentation (after #begin)
@@ -710,7 +710,7 @@ The tip for the ~org-babel~ keybindings was seen at [[https://www.wisdomandwonde
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-clock
-  :straight nil
+  :ensure nil
   :demand t
   :config
   (org-clock-persistence-insinuate)           ; resume clocking task when emacs is restarted
@@ -736,7 +736,7 @@ Here is a list of the special %-escapes or placeholders used on [[http://orgmode
 
 #+BEGIN_SRC emacs-lisp
 (use-package org-protocol
-  :straight nil
+  :ensure nil
   :demand t
   :config
   (setq org-capture-templates
@@ -799,28 +799,28 @@ Here is a list of the special %-escapes or placeholders used on [[http://orgmode
 *** org-bullets
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org-bullets
-    :demand t
-    :config
-    ;;(setq org-bullets-bullet-list '("☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"))
-    ;;(setq org-bullets-bullet-list '("♣" "♥" "♠" "♦" "♧" "♡" "♤" "♢"))
-    (validate-setq org-bullets-bullet-list '("☯" "☉" "∞" "◉" "⊚" "☀" "☾" "☥"))
-    (add-hook 'org-mode-hook (lambda () (org-bullets-mode t)))
+(use-package org-bullets
+  :demand t
+  :config
+  ;;(setq org-bullets-bullet-list '("☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"))
+  ;;(setq org-bullets-bullet-list '("♣" "♥" "♠" "♦" "♧" "♡" "♤" "♢"))
+  (validate-setq org-bullets-bullet-list '("☯" "☉" "∞" "◉" "⊚" "☀" "☾" "☥"))
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode t)))
 
-    ;; make available "org-bullet-face" such that I can control the font size individually
-    (validate-setq org-bullets-face-name (quote org-bullet-face))
-    (custom-set-faces '(org-bullet-face
-                        ((t (:foreground "burlywood"
-                                         :weight normal
-                                         :height 1.6))))
-                      ))
+  ;; make available "org-bullet-face" such that I can control the font size individually
+  (validate-setq org-bullets-face-name (quote org-bullet-face))
+  (custom-set-faces '(org-bullet-face
+                      ((t (:foreground "burlywood"
+                                       :weight normal
+                                       :height 1.6))))
+                    ))
 #+END_SRC
 
 *** ox.el
 
 #+BEGIN_SRC emacs-lisp
 (use-package ox
-  :straight nil
+  :ensure nil
   :config
   (validate-setq org-export-with-smart-quotes t))
 #+END_SRC
@@ -865,7 +865,7 @@ Babel is Org-mode’s ability to execute source code within Org-mode documents.
 
 #+BEGIN_SRC emacs-lisp
 (use-package ob
-  :straight nil
+  :ensure nil
   :config
   (org-babel-do-load-languages
    (quote org-babel-load-languages)
@@ -884,7 +884,7 @@ Babel is Org-mode’s ability to execute source code within Org-mode documents.
            (python . t)
            (R . t)
            (ruby . t)
-           (sh . t)
+           (shell . t)
            (sqlite . t)
            (sql . t)
            ))))
@@ -1090,16 +1090,31 @@ Commands are all prefixed by ~C-x x~
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
+  :hook (after-save . magit-after-save-refresh-status) ; refreshes magit status when file is saved
   :config
   (setq magit-completing-read-function 'ivy-completing-read
         magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1)
 
   ;; automatically refreshes magit status after file is saved
-  (add-hook 'after-save-hook 'magit-after-save-refresh-status)
+  ;;(add-hook 'after-save-hook 'magit-after-save-refresh-status)
   )
 #+END_SRC
 
 * Base packages
+
+** ace-link
+
+#+BEGIN_SRC emacs-lisp
+(use-package ace-link
+  :config (ace-link-setup-default))
+#+END_SRC
+
+** ace-window
+
+#+BEGIN_SRC emacs-lisp
+(use-package ace-window)
+#+END_SRC
+
 ** alert
 
 A [[https://github.com/jwiegley/alert][Growl-like alerts]] notifier for Emacs. It accepts rules for alerting about almost
@@ -1181,58 +1196,6 @@ Bookmarks to files and directories
   :config
   (setq bookmark-completion-ignore-case nil)
   (bookmark-maybe-load-default-file))
-#+END_SRC
-
-** company
-
-Company is a text completion framework for Emacs. The name stands for “complete
-anything”. It uses pluggable back-ends and front-ends to retrieve and display
-completion candidates.
-
-It comes with several back-ends such as Elisp, Clang, Semantic, Eclim, Ropemacs,
-Ispell, CMake, BBDB, Yasnippet, dabbrev, etags, gtags, files, keywords and a few
-others.
-
-The CAPF back-end provides a bridge to the standard
-completion-at-point-functions facility, and thus works with any major mode that
-defines a proper completion function.
-
-#+BEGIN_SRC emacs-lisp
-(use-package company
-  :delight company-mode " Ⓐ"
-  :bind (("C-c /" . company-files))                    ; force complete file names on "C-c /" key
-  :config
-  (add-hook 'after-init-hook 'global-company-mode)
-  (setq company-tooltip-limit 20                       ; bigger popup window
-        company-tooltip-align-annotations 't           ; align annotations to the right tooltip border
-        company-idle-delay .3                          ; decrease delay before autocompletion popup shows
-        company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
-  )
-
-(use-package company-statistics
-  :after company
-  :config
-  ;;(setq company-statistics-file
-  ;;  (concat tmp-directory "company-statistics-cache.el"))
-  (add-hook 'after-init-hook 'company-statistics-mode))
-
-(use-package slime-company
-  :after company
-  :config
-  (slime-setup '(slime-fancy slime-company)))
-
-(use-package company-ansible
-  :after company
-  :config
-  (add-to-list 'company-backends 'company-ansible))
-
-(use-package company-math
-  :after company
-  :config
-  (add-to-list 'company-backends '((company-math-symbols-unicode)
-                                   (company-math-symbols-latex)
-                                   (company-latex-commands)))
-  (setq company-tooltip-align-annotations t))
 #+END_SRC
 
 ** crux
@@ -1497,7 +1460,25 @@ Better looking break lines.
   :init (global-page-break-lines-mode))
 #+END_SRC
 
+** paradox
+
+Project for modernizing Emacs’ Package Menu. With package ratings, usage statistics, customizability, and more.
+
+#+BEGIN_SRC emacs-lisp
+(use-package paradox
+  :config
+  (setq-default paradox-column-width-package 27
+                paradox-column-width-version 13
+                paradox-execute-asynchronously t
+                paradox-github-token t
+                paradox-hide-wiki-packages t)
+  (set-face-attribute 'paradox-homepage-button-face nil :italic nil)
+  (remove-hook 'paradox--report-buffer-print 'paradox-after-execute-functions))
+#+END_SRC
+
 ** pass
+
+[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://www.passwordstore.org/][password-store]].
 
 #+BEGIN_SRC emacs-lisp
 (use-package pass)
@@ -1622,7 +1603,7 @@ looking.
 
 #+BEGIN_SRC emacs-lisp
 (use-package uniquify
-  :straight nil
+  :ensure nil
   :config
   (setq uniquify-buffer-name-style 'reverse
         uniquify-separator " • "
@@ -1638,7 +1619,6 @@ S-C-/ redo
 
 #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
-  :straight nil
   :delight undo-tree-mode nil undo-tree
   :init
   (global-undo-tree-mode))
@@ -1724,14 +1704,97 @@ prefix) in a popup.
                  which-key-allow-evil-operators t
                  which-key-show-operator-state-maps t)
 
-  ;;(add-to-list 'which-key-replacement-alist '(("up"         . nil) . ("↑" . nil)))
-  ;;(add-to-list 'which-key-replacement-alist '(("right"      . nil) . ("→" . nil)))
-  ;;(add-to-list 'which-key-replacement-alist '(("down"       . nil) . ("↓" . nil)))
-  ;;(add-to-list 'which-key-replacement-alist '(("left"       . nil) . ("←" . nil)))
-  ;;(add-to-list 'which-key-replacement-alist '(("DEL"        . nil) . ("⌫" . nil)))
-  ;;(add-to-list 'which-key-replacement-alist '(("deletechar" . nil) . ("⌦" . nil)))
-  ;;(add-to-list 'which-key-replacement-alist '(("RET"        . nil) . ("⏎" . nil)))
+  ;; Replacements for how KEY is replaced when which-key displays
+  ;;   KEY → FUNCTION
+  ;; Eg: After "C-c", display "right → winner-redo" as "▶ → winner-redo"
+  (setq which-key-key-replacement-alist
+        '(("<\\([[:alnum:]-]+\\)>" . "\\1")
+          ("left"                  . "◀")   ; ←
+          ("right"                 . "▶")   ; →
+          ("up"                    . "▲")   ; ↑
+          ("down"                  . "▼")   ; ↓
+          ("delete"                . "DEL") ; delete key
+          ("\\`DEL\\'"             . "⌫")  ; backspace key
+          ("next"                  . "PgDn")
+          ("prior"                 . "PgUp")
+          ("RET"                   . "⏎")
+          ("deletechar"            . "⌦"))
+        ))
+#+END_SRC
+
+** ztree
+
+#+BEGIN_SRC emacs-lisp
+(use-package ztree
+  :demand t)
+#+END_SRC
+
+* Auto-completion
+
+** company
+
+[[http://company-mode.github.io/][Company]] is a text completion framework for Emacs. The name stands for “complete anything”.
+It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
+
+It comes with several back-ends such as Elisp, Clang, Semantic, Eclim, Ropemacs, Ispell,
+CMake, BBDB, Yasnippet, dabbrev, etags, gtags, files, keywords and a few others.
+
+The CAPF back-end provides a bridge to the standard completion-at-point-functions
+facility, and thus works with any major mode that defines a proper completion function.
+
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :bind (("C-c /" . company-files))                    ; force complete file names on "C-c /" key
+  :config
+  (add-hook 'after-init-hook 'global-company-mode)
+  (setq company-tooltip-limit 20                       ; bigger popup window
+        company-tooltip-align-annotations 't           ; align annotations to the right tooltip border
+        company-idle-delay .3                          ; decrease delay before autocompletion popup shows
+        company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
   )
+
+(use-package company-statistics
+  :after company
+  :config
+  ;;(setq company-statistics-file
+  ;;  (concat tmp-directory "company-statistics-cache.el"))
+  (add-hook 'after-init-hook 'company-statistics-mode))
+
+(use-package slime-company
+  :after company
+  :config
+  (slime-setup '(slime-fancy slime-company)))
+
+(use-package company-ansible
+  :after company
+  :config
+  (add-to-list 'company-backends 'company-ansible))
+
+(use-package company-math
+  :after company
+  :config
+  (add-to-list 'company-backends '((company-math-symbols-unicode)
+                                   (company-math-symbols-latex)
+                                   (company-latex-commands)))
+  (setq company-tooltip-align-annotations t))
+#+END_SRC
+
+** yasnippet
+
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :demand t
+  :config
+  (setq yas-snippet-dirs
+        '(
+          ;;"~/.emacs.d/straight/build/yasnippet-snippets/snippets" ;;  yasnippet-snippets official collection
+          "~/.emacs.d/etc/yasnippet/snippets"                     ;; personal snippets
+          ))
+  (yas-global-mode 1)
+  )
+
+(use-package yasnippet-snippets
+  :after yasnippet)
 #+END_SRC
 
 * Tools
@@ -1781,7 +1844,7 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired
-  :straight nil
+  :ensure nil
   :config
   (validate-setq
    ;;ls-lisp-dirs-first t
@@ -1807,15 +1870,14 @@ Good dired tips can be found on [[http://ergoemacs.org/emacs/emacs_dired_tips.ht
 
 ;; Built into Emacs, it provides chgrp, chown, chmod and other functionalities
 (use-package dired-aux
-  :straight nil)
-
+  :ensure nil)
 #+END_SRC
 
 *** dired-x
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-x
-  :straight nil
+  :ensure nil
   :demand t
   :bind ("C-x C-j" . dired-jump)
   :config
@@ -1855,7 +1917,7 @@ Use async in everything in dired.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-async
-  :straight nil
+  :ensure nil
   :after async
   :demand t
   :config
@@ -1886,7 +1948,6 @@ cool.
 
 #+BEGIN_SRC emacs-lisp
 (use-package dired-narrow
-  :straight nil
   :bind (:map dired-mode-map
               ("/" . dired-narrow)))
 #+END_SRC
@@ -1905,7 +1966,6 @@ browsing directory in dired.
 
 #+BEGIN_SRC emacs-lisp
 (use-package peep-dired
-  :straight nil
   :bind (:map dired-mode-map
               ("P" . peep-dired))
   :config
@@ -1916,7 +1976,6 @@ browsing directory in dired.
 
 #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons-dired
-  :straight nil
   :after all-the-icons
   :init
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
@@ -2283,20 +2342,13 @@ words. [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-w
 - [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] puts different colours on parenthesis depending on their depth.
 
 #+BEGIN_SRC emacs-lisp
-(use-package smartparens-config
-  :straight nil
-  :delight smartparens-strict-mode " Ⓢ" smartparens
-  :config
-  (show-smartparens-global-mode t))
-
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+(use-package lispy
+  :hook (prog-mode . lispy-mode))
 
 (use-package rainbow-delimiters
-  :delight rainbow-mode
   :demand t
-  :config
-  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+  :delight rainbow-mode
+  :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
 ** searching documentation
@@ -2367,6 +2419,18 @@ Installs json-mode and make its reformat keybinding match the global default.
 (use-package markdown-mode)
 #+END_SRC
 
+** latex
+
+#+BEGIN_SRC emacs-lisp
+;; sync LaTeX documents when compiling
+;; https://www.reddit.com/r/emacs/comments/7ux1qj/using_auctex_mode_to_sync_latex_documents_and/
+(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+      TeX-source-correlate-start-server t)
+
+;; revert pdf-view after compilation
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+#+END_SRC
+
 ** slime
 
 #+BEGIN_SRC emacs-lisp
@@ -2418,9 +2482,6 @@ I am configuring it for PostgreSQL, of course.
   (add-hook 'sql-interactive-mode-hook 'sqlup-mode))   ; and in an interactive session (e.g. psql)
 
 (use-package sql-indent
-  :straight (sql-indent :type git
-                        :host github
-                        :repo "alex-hhh/emacs-sql-indent")
   :config
   (add-hook 'sql-mode-hook 'sqlind-minor-mode))
 #+END_SRC
@@ -2477,7 +2538,7 @@ significant differences to address. To this end, I [[http://www.howardism.org/Te
 
 ;; Like Plan-9 shell
 (use-package em-smart
-  :straight nil
+  :ensure nil
   :init
   (add-hook 'eshell-mode-hook 'eshell-smart-initialize)
   :config
@@ -2492,7 +2553,6 @@ significant differences to address. To this end, I [[http://www.howardism.org/Te
 
 #+BEGIN_SRC emacs-lisp
 (use-package better-shell
-  :straight nil
   :bind (("C-'" . better-shell-shell)
          ("C-;" . better-shell-remote-open)))
 #+END_SRC
@@ -2595,21 +2655,16 @@ If you want to try using font ligatures, check [[https://github.com/tonsky/FiraC
                            :height 90))
       ((system-is-mac)
        (set-face-attribute 'default nil
-                           :family "Fira Code Retina"
+                           ;;:family "Fira Code"
+                           :family "Monaco"
                            :height 100)
        ))
-
-;; Set a smaller font for the mode line
-;;(set-face-attribute 'mode-line nil
-;;                    :family "Source Code Pro for Powerline"
-;;                    :height 100)
 
 ;; Set a font with great support for Unicode Symbols to fallback in those case
 ;; where certain Unicode glyphs are missing in the current font.
 ;; Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
 (set-fontset-font "fontset-default" nil
                   (font-spec :size 100 :name "Fontawesome"))
-;;(font-spec :size 20 :name "Symbola"))
 #+END_SRC
 
 ** Themes
@@ -2635,6 +2690,7 @@ Check the changes required for the [[https://gist.github.com/rubensts/a0d8786a63
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
+  :disabled t
   :init
   (load-theme 'doom-one t)
   :config
@@ -2644,6 +2700,10 @@ Check the changes required for the [[https://gist.github.com/rubensts/a0d8786a63
   (doom-themes-visual-bell-config) ; flashes mode-line on errors
   (doom-themes-neotree-config)     ; custom neotree theme (all-the-icons fonts)
   (doom-themes-org-config))        ; corrects (and improves) org-mode's native fontification
+
+(use-package leuven-theme
+  :init
+  (load-theme 'leuven t))
  #+END_SRC
 
 ** Modeline
@@ -2680,33 +2740,17 @@ for minor modes, which makes the configuration simpler.
 *** spaceline
 
 #+BEGIN_SRC emacs-lisp
-(use-package spaceline
+(use-package spaceline-all-the-icons
   :demand t
   :config
-  (setq powerline-default-separator 'wave
-        spaceline-window-numbers-unicode t
-        spaceline-workspace-numbers-unicode t))
+  (spaceline-all-the-icons--setup-anzu)            ;; Enable anzu searching
+  (spaceline-all-the-icons--setup-git-ahead)       ;; Enable # of commits ahead of upstream in git
 
-(use-package spaceline-config
-  :straight nil
-  :demand t
-  :config
-  (spaceline-spacemacs-theme))
-
-;;(use-package spaceline-all-the-icons
-;;  :straight (spaceline-all-the-icons :type git
-;;                                     :host github
-;;                                     :repo "domtronn/spaceline-all-the-icons.el")
-;;  :demand t
-;;  :config
-;;  (spaceline-all-the-icons--setup-anzu)            ;; Enable anzu searching
-;;  (spaceline-all-the-icons--setup-git-ahead)       ;; Enable # of commits ahead of upstream in git
-;;
-;;  ;; enable some segments that are disabled by default
-;;  (spaceline-toggle-all-the-icons-bookmark-on)        ; indicates if current file is bookmarked
-;;  (spaceline-toggle-all-the-icons-dedicated-on)       ; indicates if current file is dedicated
-;;  (spaceline-toggle-all-the-icons-narrowed-on)        ; indicates if current buffer has been narrowed
-;;  (spaceline-toggle-all-the-icons-buffer-position-on) ; position through the buffer as a percentage
-;;  (spaceline-all-the-icons-theme)
-;;  )
+  ;; enable some segments that are disabled by default
+  (spaceline-toggle-all-the-icons-bookmark-on)        ; indicates if current file is bookmarked
+  ;;(spaceline-toggle-all-the-icons-dedicated-on)       ; indicates if current file is dedicated
+  ;;(spaceline-toggle-all-the-icons-narrowed-on)        ; indicates if current buffer has been narrowed
+  ;;(spaceline-toggle-all-the-icons-buffer-position-on) ; position through the buffer as a percentage
+  (spaceline-all-the-icons-theme)
+  )
 #+END_SRC

@@ -2,31 +2,38 @@
 ;;; Commentary:
 ;;; Code:
 
-;; straight.el bootstrap
-(let ((bootstrap-file (concat user-emacs-directory "straight/repos/straight.el/bootstrap.el"))
-      (bootstrap-version 3))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+;; Loading it here allows adding the new repositories listed below
+(require 'package)
 
-(setq straight-use-package-by-default t)
+;; Sets the ELPA repositories from where packages are fetched
+(setq package-archives '(("org"   . "https://orgmode.org/elpa/")
+                         ("melpa" . "https://melpa.org/packages/")
+                         ("gnu"   . "https://elpa.gnu.org/packages/")))
+
+;; By default package-initialize is called after init.el.
+;; Calling it here because some packages listed depend on it.
+(package-initialize)
 
 ;;----------------------------------------------------------------------------
-;; Increase memory to 20MB before calling garbage collector, to make things
+;; Increase memory to 50MB before calling garbage collector, to make things
 ;; snappier (default is 800KB)
 ;;----------------------------------------------------------------------------
-(setq gc-cons-threshold (* 20 1024 1024))
+(setq gc-cons-threshold (* 50 1024 1024))
 
 ;;----------------------------------------------------------------------------
 ;; Require use-package - loading packages is handled by it
 ;;----------------------------------------------------------------------------
-(straight-use-package 'use-package)
-(setq-default use-package-always-defer t)
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package)
+  (setq-default use-package-always-defer t
+                use-package-always-ensure t))
+
+(require 'subr-x)
+(require 'time-date)
 
 ;;----------------------------------------------------------------------------
 ;; Load required packages
