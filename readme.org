@@ -1101,7 +1101,6 @@ Commands are all prefixed by ~C-x x~
 #+END_SRC
 
 * Base packages
-
 ** ace-link
 
 #+BEGIN_SRC emacs-lisp
@@ -1729,9 +1728,45 @@ prefix) in a popup.
   :demand t)
 #+END_SRC
 
-* Auto-completion
+* Programming
+** environment and preferences
+*** indentation
 
-** company
+- [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]] keeps the code always indented.
+- [[https://github.com/DarthFennec/highlight-indent-guides][highligh-indent-guides]] minor mode to highlight indentation. I prefer it over
+  [[https://github.com/zk-phi/indent-guide][indent-guide]] (too slow when I tested it)
+
+#+BEGIN_SRC emacs-lisp
+(use-package aggressive-indent
+  :demand t
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode))
+
+(use-package highlight-indent-guides
+  :config
+  (validate-setq highlight-indent-guides-method 'character)
+  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode))
+#+END_SRC
+
+*** parenthesis and delimiters
+
+- [[https://github.com/Fuco1/smartparens][smartparens]] is a minor mode that deals with parens pairs and tries to be smart
+  about it. There are good tips [[https://ebzzry.github.io/emacs-pairs.html][here]].
+
+- [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] puts different colours on parenthesis depending on their depth.
+
+#+BEGIN_SRC emacs-lisp
+(use-package lispy
+  :hook (prog-mode . lispy-mode))
+
+(use-package rainbow-delimiters
+  :demand t
+  :delight rainbow-mode
+  :hook (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
+
+*** company
 
 [[http://company-mode.github.io/][Company]] is a text completion framework for Emacs. The name stands for “complete anything”.
 It uses pluggable back-ends and front-ends to retrieve and display completion candidates.
@@ -1746,12 +1781,16 @@ facility, and thus works with any major mode that defines a proper completion fu
 (use-package company
   :bind (("C-c /" . company-files))                    ; force complete file names on "C-c /" key
   :config
-  (add-hook 'after-init-hook 'global-company-mode)
   (setq company-tooltip-limit 20                       ; bigger popup window
         company-tooltip-align-annotations 't           ; align annotations to the right tooltip border
         company-idle-delay .3                          ; decrease delay before autocompletion popup shows
         company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
-  )
+  (add-hook 'after-init-hook 'global-company-mode))
+
+(use-package company-lsp
+  :after company
+  :config
+  (add-to-list 'company-backends 'company-lsp))
 
 (use-package company-statistics
   :after company
@@ -1779,22 +1818,298 @@ facility, and thus works with any major mode that defines a proper completion fu
   (setq company-tooltip-align-annotations t))
 #+END_SRC
 
-** yasnippet
+*** yasnippet
 
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
   :demand t
   :config
-  (setq yas-snippet-dirs
-        '(
-          ;;"~/.emacs.d/straight/build/yasnippet-snippets/snippets" ;;  yasnippet-snippets official collection
-          "~/.emacs.d/etc/yasnippet/snippets"                     ;; personal snippets
-          ))
+  ;; (setq yas-snippet-dirs
+  ;;       '("~/.emacs.d/etc/yasnippet/snippets"))
   (yas-global-mode 1)
   )
 
 (use-package yasnippet-snippets
   :after yasnippet)
+#+END_SRC
+
+** text notation and manipulation
+*** ascii-doc
+
+[[http://www.methods.co.nz/asciidoc/][AsciiDoc]] is a text document format for writing short documents, articles, books
+and UNIX man pages. AsciiDoc files can be translated to HTML and DocBook
+markups.
+
+[[https://github.com/sensorflo/adoc-mode][adoc-mode]] is an Emacs major mode for editing AsciiDoc files. It emphasizes on
+the idea that the document is highlighted so it pretty much looks like the final
+output. What must be bold is bold, what must be italic is italic etc. Meta
+characters are naturally still visible, but in a faint way, so they can be
+easily ignored.
+
+#+BEGIN_SRC emacs-lisp
+(use-package adoc-mode
+  :config
+  (autoload 'adoc-mode "adoc-mode" nil t))
+#+END_SRC
+
+*** jinja2
+
+#+BEGIN_SRC emacs-lisp
+(use-package jinja2-mode
+  :mode "\\.j2\\'")
+#+END_SRC
+
+*** json-mode
+
+Installs json-mode and make its reformat keybinding match the global default.
+
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode
+  :commands json-mode
+  :config
+  (bind-keys :map json-mode-map
+             ("C-c <tab>" . json-mode-beautify)))
+#+END_SRC
+
+*** latex
+
+#+BEGIN_SRC emacs-lisp
+;; sync LaTeX documents when compiling
+;; https://www.reddit.com/r/emacs/comments/7ux1qj/using_auctex_mode_to_sync_latex_documents_and/
+(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+      TeX-source-correlate-start-server t)
+
+;; revert pdf-view after compilation
+(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+#+END_SRC
+
+*** markdown
+
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode)
+#+END_SRC
+
+*** yaml
+
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode)
+#+END_SRC
+
+** languages
+*** language server protocol
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-mode
+  :init
+  (add-hook 'prog-mode-hook 'lsp-mode))
+
+(use-package lsp-flycheck
+  :ensure f        ; it comes with lsp-mode
+  :after flycheck)
+#+END_SRC
+
+*** python
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-python
+  :config
+  (add-hook 'python-mode-hook #'lsp-python-enable))
+#+END_SRC
+
+*** rust
+
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-rust
+  :after lsp-mode)
+
+(use-package rust-mode
+  :mode "\\.rs\\'"
+  :init
+  (setq rust-format-on-save t))
+#+END_SRC
+
+*** slime
+
+#+BEGIN_SRC emacs-lisp
+(use-package slime
+  :config
+  (load (expand-file-name "~/quicklisp/slime-helper.el"))
+  (setq inferior-lisp-program "sbcl"))
+
+(use-package elisp-slime-nav
+  :delight elisp-slime-nav-mode nil elisp-slime-nav
+  :after slime
+  :config
+  (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
+    (add-hook hook 'turn-on-elisp-slime-nav-mode)))
+#+END_SRC
+
+*** sql
+Emacs has SQLi mode buitin, which work pretty well to connect to databases. Here
+I am configuring it for PostgreSQL, of course.
+
+[[https://github.com/Trevoke/sqlup-mode.el][sqlup-mode]] is a minor mode to upcase SQL keyword and functions.
+
+[[https://github.com/alex-hhh/emacs-sql-indent][sql-indent]] is a syntax based indentation for SQL files inside GNU Emacs.
+
+#+BEGIN_SRC emacs-lisp
+;; Make SQLi default to PostgreSQL syntax highlighti
+;; https://blogs.gentoo.org/titanofold/2011/05/17/postgresql-syntax-highlighting-in-emacs/
+(eval-after-load "sql"
+  '(progn (sql-set-product 'postgres)))
+
+;; Set default config for login
+;; https://truongtx.me/2014/08/23/setup-emacs-as-an-sql-database-client/
+(setq sql-postgres-login-params
+      '((user :default "postgres")
+        (database :default "postgres")
+        (server)))
+
+;; Truncate lines to better visualize many columns tables
+;; Automatically renames the *SQL* buffer to *SQL user/database*
+(add-hook 'sql-interactive-mode-hook
+          (lambda ()
+            (toggle-truncate-lines t)
+            (sql-rename-buffer)))
+
+(use-package sqlup-mode
+  :bind (("C-c u" . sqlup-capitalize-keywords-in-region))
+  :config
+  (add-hook 'sql-mode-hook 'sqlup-mode)                ; capitalize keywords in SQL mode
+  (add-hook 'sql-interactive-mode-hook 'sqlup-mode))   ; and in an interactive session (e.g. psql)
+
+(use-package sql-indent
+  :config
+  (add-hook 'sql-mode-hook 'sqlind-minor-mode))
+#+END_SRC
+
+* Devops
+** eshell
+
+[[https://github.com/dakrone/eos/blob/master/eos-shell.org][source]]
+
+My frustration with shells makes me enjoy Emacs Shell, but there are some
+significant differences to address. To this end, I [[http://www.howardism.org/Technical/Emacs/eshell-fun.html][documented most features]].
+
+#+BEGIN_SRC emacs-lisp
+(setenv "LANG" "en_US.UTF-8")
+(setenv "PAGER" "cat")
+(setq eshell-scroll-to-bottom-on-input t)
+
+;; Define a keybinding to get to your eshell quickly.
+(global-set-key (kbd "C-c e") 'eshell)
+
+;; Visual commands are commands which require a proper terminal.
+;; eshell will run them in a term buffer when you invoke them.
+(setq eshell-visual-commands
+      '("less" "tmux" "htop" "top" "bash" "zsh" "fish"))
+(setq eshell-visual-subcommands
+      '(("git" "log" "l" "diff" "show")))
+
+(setq eshell-cmpl-cycle-completions t)  ;TAB for suggestion
+
+(add-hook 'eshell-mode-hook
+          (lambda ()
+            (setq-local show-trailing-whitespace nil)
+            (semantic-mode -1)
+            (hl-line-mode -1)
+            (global-hl-line-mode -1)))
+
+;; Define a pretty prompt.
+(use-package eshell-git-prompt
+  :demand t
+  :config
+  (eshell-git-prompt-use-theme 'powerline))
+
+(add-hook 'eshell-mode-hook
+          (lambda ()
+            (define-key eshell-mode-map
+              (kbd "<tab>") 'completion-at-point)))
+
+
+;; Like Plan-9 shell
+(use-package em-smart
+  :ensure nil
+  :init
+  (add-hook 'eshell-mode-hook 'eshell-smart-initialize)
+  :config
+  (setq eshell-where-to-jump 'begin
+        eshell-review-quick-commands nil
+        eshell-smart-space-goes-to-end t))
+#+END_SRC
+
+*** better-shell
+
+[[https://github.com/killdash9/better-shell][better-shell]] simplifies shell management and sudo access.
+
+#+BEGIN_SRC emacs-lisp
+(use-package better-shell
+  :bind (("C-'" . better-shell-shell)
+         ("C-;" . better-shell-remote-open)))
+#+END_SRC
+
+*** eshell history with counsel
+
+Navigate eshell history using counsel. Keybinding to `C-c C-l` - [[http://informatica.boccaperta.com/m-x-emacs-history-di-eshell-con-counsel/][Boccaperta]]
+
+FIXME: There's a bug on Eshell that forces the key-binding to be include using
+the `add-hook` below (not nice!). As soon as the bug is fixed, add the
+key-binding using `bind` from use-package:
+
+:bind (:map eshell-mode-map
+            ("C-c C-l" . mu-counsel-esh-history))
+
+ #+BEGIN_SRC emacs-lisp
+(defun mu-counsel-esh-history ()
+  "Browse Eshell history."
+  (interactive)
+  (setq ivy-completion-beg (point))
+  (setq ivy-completion-end (point))
+  (ivy-read "Symbol name: "
+            (delete-dups
+             (ring-elements eshell-history-ring))
+            :action #'ivy-completion-in-region-action))
+
+(add-hook 'eshell-mode-hook
+          #'(lambda ()
+              (bind-key "C-c C-l" #'mu-counsel-esh-history
+                        eshell-mode-map)))
+ #+END_SRC
+
+** tramp
+
+#+BEGIN_SRC emacs-lisp
+(setq tramp-default-method "ssh")
+#+END_SRC
+
+** ansible
+
+#+BEGIN_SRC emacs-lisp
+(use-package ansible
+  :init
+  (add-hook 'yaml-mode-hook '(lambda () (ansible 1))))
+
+(use-package ansible-doc
+  :after ansible
+  :init
+  (add-hook 'yaml-mode-hook #'ansible-doc-mode))
+#+END_SRC
+
+** puppet
+
+#+BEGIN_SRC emacs-lisp
+(use-package puppet-mode)
+#+END_SRC
+
+** vagrant
+
+#+BEGIN_SRC emacs-lisp
+(use-package vagrant)
+
+(use-package vagrant-tramp
+  :after vagrant
+  :config
+  (eval-after-load 'tramp '(vagrant-tramp-add-method)))
 #+END_SRC
 
 * Tools
@@ -2314,313 +2629,6 @@ words. [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-w
     (add-hook 'markdown-mode-hook 'writegood-mode)))
 #+END_SRC
 
-* Programming
-** indentation
-
-- [[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]] keeps the code always indented.
-- [[https://github.com/DarthFennec/highlight-indent-guides][highligh-indent-guides]] minor mode to highlight indentation. I prefer it over
-  [[https://github.com/zk-phi/indent-guide][indent-guide]] (too slow when I tested it)
-
-#+BEGIN_SRC emacs-lisp
-(use-package aggressive-indent
-  :demand t
-  :config
-  (global-aggressive-indent-mode 1)
-  (add-to-list 'aggressive-indent-excluded-modes 'html-mode))
-
-(use-package highlight-indent-guides
-  :config
-  (validate-setq highlight-indent-guides-method 'character)
-  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode))
-#+END_SRC
-
-** parenthesis and delimiters
-
-- [[https://github.com/Fuco1/smartparens][smartparens]] is a minor mode that deals with parens pairs and tries to be smart
-  about it. There are good tips [[https://ebzzry.github.io/emacs-pairs.html][here]].
-
-- [[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] puts different colours on parenthesis depending on their depth.
-
-#+BEGIN_SRC emacs-lisp
-(use-package lispy
-  :hook (prog-mode . lispy-mode))
-
-(use-package rainbow-delimiters
-  :demand t
-  :delight rainbow-mode
-  :hook (prog-mode . rainbow-delimiters-mode))
-#+END_SRC
-
-** searching documentation
-
-These are 2 options for searching software documentation from within Emacs: [[https://zealdocs.org/][Zeal]]
-(if you are on Linux) or [[https://kapeli.com/dash][Dash]] (if on macOS).
-
-*Remember*: Install the docsets after installing Zeal or Dash
-
-#+BEGIN_SRC emacs-lisp
-(cond ((system-is-linux)
-       (use-package zeal-at-point
-         :disabled t
-         :config
-         (add-to-list 'zeal-at-point-mode-alist '(python-mode . "python"))
-         (add-to-list 'zeal-at-point-mode-alist '(sql-mode . "postgresql"))
-         ))
-
-      ((system-is-mac)
-        (use-package dash-at-point
-          :disabled t
-         :config
-         (add-to-list 'zeal-at-point-mode-alist '(python-mode . "python"))
-         (add-to-list 'zeal-at-point-mode-alist '(sql-mode . "postgresql"))
-       )))
-#+END_SRC
-
-** ascii-doc
-
-[[http://www.methods.co.nz/asciidoc/][AsciiDoc]] is a text document format for writing short documents, articles, books
-and UNIX man pages. AsciiDoc files can be translated to HTML and DocBook
-markups.
-
-[[https://github.com/sensorflo/adoc-mode][adoc-mode]] is an Emacs major mode for editing AsciiDoc files. It emphasizes on
-the idea that the document is highlighted so it pretty much looks like the final
-output. What must be bold is bold, what must be italic is italic etc. Meta
-characters are naturally still visible, but in a faint way, so they can be
-easily ignored.
-
-#+BEGIN_SRC emacs-lisp
-(use-package adoc-mode
-  :config
-  (autoload 'adoc-mode "adoc-mode" nil t))
-#+END_SRC
-
-** jinja2
-
-#+BEGIN_SRC emacs-lisp
-(use-package jinja2-mode
-  :mode "\\.j2\\'")
-#+END_SRC
-
-** json-mode
-
-Installs json-mode and make its reformat keybinding match the global default.
-
-#+BEGIN_SRC emacs-lisp
-(use-package json-mode
-  :commands json-mode
-  :config
-  (bind-keys :map json-mode-map
-             ("C-c <tab>" . json-mode-beautify)))
-#+END_SRC
-
-** markdown
-
-#+BEGIN_SRC emacs-lisp
-(use-package markdown-mode)
-#+END_SRC
-
-** latex
-
-#+BEGIN_SRC emacs-lisp
-;; sync LaTeX documents when compiling
-;; https://www.reddit.com/r/emacs/comments/7ux1qj/using_auctex_mode_to_sync_latex_documents_and/
-(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-      TeX-source-correlate-start-server t)
-
-;; revert pdf-view after compilation
-(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
-#+END_SRC
-
-** slime
-
-#+BEGIN_SRC emacs-lisp
-(use-package slime
-  :config
-  (load (expand-file-name "~/quicklisp/slime-helper.el"))
-  (setq inferior-lisp-program "sbcl"))
-
-(use-package elisp-slime-nav
-  :delight elisp-slime-nav-mode nil elisp-slime-nav
-  :after slime
-  :config
-  (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
-    (add-hook hook 'turn-on-elisp-slime-nav-mode)))
-#+END_SRC
-
-** SQL
-Emacs has SQLi mode buitin, which work pretty well to connect to databases. Here
-I am configuring it for PostgreSQL, of course.
-
-[[https://github.com/Trevoke/sqlup-mode.el][sqlup-mode]] is a minor mode to upcase SQL keyword and functions.
-
-[[https://github.com/alex-hhh/emacs-sql-indent][sql-indent]] is a syntax based indentation for SQL files inside GNU Emacs.
-
-#+BEGIN_SRC emacs-lisp
-;; Make SQLi default to PostgreSQL syntax highlighti
-;; https://blogs.gentoo.org/titanofold/2011/05/17/postgresql-syntax-highlighting-in-emacs/
-(eval-after-load "sql"
-  '(progn (sql-set-product 'postgres)))
-
-;; Set default config for login
-;; https://truongtx.me/2014/08/23/setup-emacs-as-an-sql-database-client/
-(setq sql-postgres-login-params
-      '((user :default "postgres")
-        (database :default "postgres")
-        (server)))
-
-;; Truncate lines to better visualize many columns tables
-;; Automatically renames the *SQL* buffer to *SQL user/database*
-(add-hook 'sql-interactive-mode-hook
-          (lambda ()
-            (toggle-truncate-lines t)
-            (sql-rename-buffer)))
-
-(use-package sqlup-mode
-  :bind (("C-c u" . sqlup-capitalize-keywords-in-region))
-  :config
-  (add-hook 'sql-mode-hook 'sqlup-mode)                ; capitalize keywords in SQL mode
-  (add-hook 'sql-interactive-mode-hook 'sqlup-mode))   ; and in an interactive session (e.g. psql)
-
-(use-package sql-indent
-  :config
-  (add-hook 'sql-mode-hook 'sqlind-minor-mode))
-#+END_SRC
-
-** yaml
-
-#+BEGIN_SRC emacs-lisp
-(use-package yaml-mode)
-#+END_SRC
-
-* Devops
-** eshell
-
-[[https://github.com/dakrone/eos/blob/master/eos-shell.org][source]]
-
-My frustration with shells makes me enjoy Emacs Shell, but there are some
-significant differences to address. To this end, I [[http://www.howardism.org/Technical/Emacs/eshell-fun.html][documented most features]].
-
-#+BEGIN_SRC emacs-lisp
-(setenv "LANG" "en_US.UTF-8")
-(setenv "PAGER" "cat")
-(setq eshell-scroll-to-bottom-on-input t)
-
-;; Define a keybinding to get to your eshell quickly.
-(global-set-key (kbd "C-c e") 'eshell)
-
-;; Visual commands are commands which require a proper terminal.
-;; eshell will run them in a term buffer when you invoke them.
-(setq eshell-visual-commands
-      '("less" "tmux" "htop" "top" "bash" "zsh" "fish"))
-(setq eshell-visual-subcommands
-      '(("git" "log" "l" "diff" "show")))
-
-(setq eshell-cmpl-cycle-completions t)  ;TAB for suggestion
-
-(add-hook 'eshell-mode-hook
-          (lambda ()
-            (setq-local show-trailing-whitespace nil)
-            (semantic-mode -1)
-            (hl-line-mode -1)
-            (global-hl-line-mode -1)))
-
-;; Define a pretty prompt.
-(use-package eshell-git-prompt
-  :demand t
-  :config
-  (eshell-git-prompt-use-theme 'powerline))
-
-(add-hook 'eshell-mode-hook
-          (lambda ()
-            (define-key eshell-mode-map
-              (kbd "<tab>") 'completion-at-point)))
-
-
-;; Like Plan-9 shell
-(use-package em-smart
-  :ensure nil
-  :init
-  (add-hook 'eshell-mode-hook 'eshell-smart-initialize)
-  :config
-  (setq eshell-where-to-jump 'begin
-        eshell-review-quick-commands nil
-        eshell-smart-space-goes-to-end t))
-#+END_SRC
-
-*** better-shell
-
-[[https://github.com/killdash9/better-shell][better-shell]] simplifies shell management and sudo access.
-
-#+BEGIN_SRC emacs-lisp
-(use-package better-shell
-  :bind (("C-'" . better-shell-shell)
-         ("C-;" . better-shell-remote-open)))
-#+END_SRC
-
-*** eshell history with counsel
-
-Navigate eshell history using counsel. Keybinding to `C-c C-l` - [[http://informatica.boccaperta.com/m-x-emacs-history-di-eshell-con-counsel/][Boccaperta]]
-
-FIXME: There's a bug on Eshell that forces the key-binding to be include using
-the `add-hook` below (not nice!). As soon as the bug is fixed, add the
-key-binding using `bind` from use-package:
-
-:bind (:map eshell-mode-map
-            ("C-c C-l" . mu-counsel-esh-history))
-
- #+BEGIN_SRC emacs-lisp
-(defun mu-counsel-esh-history ()
-  "Browse Eshell history."
-  (interactive)
-  (setq ivy-completion-beg (point))
-  (setq ivy-completion-end (point))
-  (ivy-read "Symbol name: "
-            (delete-dups
-             (ring-elements eshell-history-ring))
-            :action #'ivy-completion-in-region-action))
-
-(add-hook 'eshell-mode-hook
-          #'(lambda ()
-              (bind-key "C-c C-l" #'mu-counsel-esh-history
-                        eshell-mode-map)))
- #+END_SRC
-
-** tramp
-
-#+BEGIN_SRC emacs-lisp
-(setq tramp-default-method "ssh")
-#+END_SRC
-
-** ansible
-
-#+BEGIN_SRC emacs-lisp
-(use-package ansible
-  :init
-  (add-hook 'yaml-mode-hook '(lambda () (ansible 1))))
-
-(use-package ansible-doc
-  :after ansible
-  :init
-  (add-hook 'yaml-mode-hook #'ansible-doc-mode))
-#+END_SRC
-
-** puppet
-
-#+BEGIN_SRC emacs-lisp
-(use-package puppet-mode)
-#+END_SRC
-
-** vagrant
-
-#+BEGIN_SRC emacs-lisp
-(use-package vagrant)
-
-(use-package vagrant-tramp
-  :after vagrant
-  :config
-  (eval-after-load 'tramp '(vagrant-tramp-add-method)))
-#+END_SRC
-
 * Appearance
 ** Fonts
 *** all-the-icons
@@ -2655,8 +2663,7 @@ If you want to try using font ligatures, check [[https://github.com/tonsky/FiraC
                            :height 90))
       ((system-is-mac)
        (set-face-attribute 'default nil
-                           ;;:family "Fira Code"
-                           :family "Monaco"
+                           :family "Fira Code"
                            :height 100)
        ))
 
@@ -2682,7 +2689,7 @@ don't forget the disable the one that is active.
 - [[https://github.com/bbatsov/solarized-emacs][solarized-theme]]
 - [[https://github.com/nashamri/spacemacs-theme][spacemacs-theme]]
 - [[https://github.com/bbatsov/zenburn-emacs][zenburn-theme]]
-- [[https://petton.fr/git/nico/zerodark-theme][zerodark-theme]]
+- [[https://gitlab.petton.fr/nico/zerodark-theme][zerodark-theme]]
 
 Some themes, as solarized and material, change the pitch size of org-headers, leaving them
 a little too big for someone's taste. Of course, as this is Emacs, they can be adjusted.
@@ -2690,11 +2697,10 @@ Check the changes required for the [[https://gist.github.com/rubensts/a0d8786a63
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
-  :disabled t
   :init
   (load-theme 'doom-one t)
   :config
-  (validate-setq doom-themes-enable-bold t    ; bold is universally enable
+  (validate-setq ;;doom-themes-enable-bold t    ; bold is universally enable
                  doom-themes-enable-italic t) ; italics is universally enabled
 
   (doom-themes-visual-bell-config) ; flashes mode-line on errors
@@ -2702,6 +2708,7 @@ Check the changes required for the [[https://gist.github.com/rubensts/a0d8786a63
   (doom-themes-org-config))        ; corrects (and improves) org-mode's native fontification
 
 (use-package leuven-theme
+  :disabled t
   :init
   (load-theme 'leuven t))
  #+END_SRC
