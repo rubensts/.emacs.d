@@ -1456,19 +1456,6 @@ to (recursively) create the file's parent directories."
   :after lsp-mode)
 ;; rust:1 ends here
 
-;; [[file:~/.emacs.d/readme.org::*slime][slime:1]]
-(use-package slime
-  :config
-  (load (expand-file-name "~/quicklisp/slime-helper.el"))
-  (setq inferior-lisp-program "sbcl"))
-
-(use-package elisp-slime-nav
-  :after slime
-  :config
-  (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
-    (add-hook hook 'turn-on-elisp-slime-nav-mode)))
-;; slime:1 ends here
-
 ;; [[file:~/.emacs.d/readme.org::*sql][sql:1]]
 ;; Make SQLi default to PostgreSQL syntax highlighti
 ;; https://blogs.gentoo.org/titanofold/2011/05/17/postgresql-syntax-highlighting-in-emacs/
@@ -1855,34 +1842,51 @@ Version 2016-12-22"
 ;; IRC (Internet Relay Chat):1 ends here
 
 ;; [[file:~/.emacs.d/readme.org::*hunspell%20setup][hunspell setup:1]]
+(use-package ispell
+  :if
+  (and (eq system-type 'darwin)
+       (setenv "DICPATH" "/Users/rubens/Library/Spelling")
+       (setenv "DICTIONARY" "en_GB")
+       (setenv "LANG" "en_GB"))
+  :config
+  (setq ispell-dictionary "en_GB")
+  (setq ispell-program-name (executable-find "hunspell"))
+  (setq ispell-extra-args '("-i" "utf-8"))
+  (setq ispell-really-hunspell t)
+  (setq ispell-check-comments  t)
+
+  (unless ispell-program-name
+    (warn "No spell checker available. Please install hunspell.")))
+
 (use-package flyspell
+  :defer t
+  :hook ((prog-mode     . flyspell-prog-mode)
+         (text-mode     . flyspell-mode)
+         (org-mode      . flyspell-mode)
+         (markdown-mode . flyspell-mode)
+         (LaTeX-mode    . flyspell-mode))
   :config
   (progn
-    (when (system-is-mac)
-      (setenv "DICTIONARY" "en_GB"))
+    (setq ispell-local-dictionary-alist '(("en_GB"
+                                           "[[:alpha:]]"
+                                           "[^[:alpha:]]"
+                                           "[']" nil
+                                           ("-d" "en_GB") nil utf-8)
+                                          ("it_IT"
+                                           "[[:alpha:]]"
+                                           "[^[:alpha:]]"
+                                           "[']" nil
+                                           ("-d" "it_IT") nil utf-8)
+                                          )))
 
-    (validate-setq ispell-program-name "hunspell"
-                   ispell-dictionary "en_GB"
-                   ispell-really-hunspell t
-                   ispell-check-comments  t
-                   ispell-extra-args      '("-i" "utf-8")
-                   ispell-dictionary-alist '(("en_GB"
-                                              "[[:alpha:]]"
-                                              "[^[:alpha:]]"
-                                              "[']" nil ("-d" "en_GB") nil utf-8)
-                                             '("it_IT"
-                                               "[[:alpha:]]"
-                                               "[^[:alpha:]]"
-                                               "[']" nil ("-d" "it_IT") nil utf-8)
-                                             )))
+  (setq flyspell-issue-welcome-flag nil  ; turn off flyspell welcome message
+        flyspell-issue-message-flag nil) ; turn off flyspell messages when checking words
+)
 
-  (validate-setq flyspell-issue-welcome-flag nil      ; turn off flyspell welcome message
-                 flyspell-issue-message-flag nil)     ; turn off flyspell messages when checking words
-
-  (add-hook 'prog-mode-hook     'flyspell-prog-mode)  ; spell check in program comments
-  (add-hook 'org-mode-hook      'flyspell-mode)       ; spell check in md/plain text/org-mode
-  (add-hook 'text-mode-hook     'flyspell-mode)
-  (add-hook 'markdown-mode-hook 'flyspell-mode))
+(use-package flyspell-correct-ivy       ; better interface for corrections
+  :demand t
+  :bind (:map flyspell-mode-map
+              ("C-c $" . flyspell-correct-at-point)))
 ;; hunspell setup:1 ends here
 
 ;; [[file:~/.emacs.d/readme.org::*Switch%20dictionaries][Switch dictionaries:1]]
@@ -2141,29 +2145,29 @@ Version 2016-12-22"
   :hook (after-init . doom-modeline-init))
 ;; Modeline:1 ends here
 
-;; [[file:~/.emacs.d/readme.org::*test%205][test 5:1]]
-(set-frame-font (font-spec :name "Hack" :size 12) t t)
-(custom-theme-set-faces 'user '(fixed-pitch ((t
-                                              :family "Hack"
-                                              :height 1.0))))  ;; was Luxi Mono
-(custom-theme-set-faces 'user '(variable-pitch ((t
-                                                 :family "EtBembo"
-                                                 :height 1.2))))
-(add-to-list 'initial-frame-alist '(line-spacing . 1))
-(add-to-list 'default-frame-alist '(line-spacing . 1))
+;; [[file:~/.emacs.d/readme.org::*test%202][test 2:1]]
+(cond ((system-is-linux)
+       (set-face-attribute 'default nil
+                           ;;:family "Source Code Pro"
+                           :family "SauceCodePro Nerd Font"
+                           :height 90))
+      ((system-is-mac)
+       (set-face-attribute 'default nil
+                           ;;:family "FuraCode Nerd Font"
+                           :family "SauceCodePro Nerd Font"
+                           :height 110)
 
-;; Replace the default line-extends-beyond-window symbol
-(set-display-table-slot standard-display-table 0 ?›)
+       ;; Enable emoji, and stop the UI from freezing when trying to display them.
+       ;;(if (fboundp 'set-fontset-font)
+       ;;    (set-fontset-font t 'unicode "Apple Color Emoji" nil 'prepend))
+       ))
 
-(when (require 'face-remap nil 'noerror)
-  ;; Make available smaller changes in text size
-  (setq-default text-scale-mode-step 1.05)
-
-  ;; Set fixed-width fonts where needed
-  (setq-default buffer-face-mode-face '(:inherit fixed-pitch))
-  (add-hook 'calendar-mode-hook #'buffer-face-mode)
-  (add-hook 'notmuch-tree-mode-hook #'buffer-face-mode))
-;; test 5:1 ends here
+;; Set a font with great support for Unicode Symbols to fallback in those case
+;; where certain Unicode glyphs are missing in the current font.
+;; Test range: 🐷 ❤ ⊄ ∫ 𝛼 α 🜚 Ⓚ
+;;(set-fontset-font "fontset-default" nil
+;;                 (font-spec :size 100 :name "SauceCodePro Nerd"))
+;; test 2:1 ends here
 
 ;; [[file:~/.emacs.d/readme.org::*all-the-icons][all-the-icons:1]]
 (use-package all-the-icons)
