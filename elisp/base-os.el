@@ -10,12 +10,16 @@
   (string-equal system-type "gnu/linux"))
 
 (use-package exec-path-from-shell
-  :if (and (eq system-type 'darwin) (display-graphic-p))
+  :if (system-is-mac)
   :config
-  (progn
-    (when (string-match-p "/zsh$" (getenv "SHELL"))
-      (setq exec-path-from-shell-arguments '("-l")))
-    (exec-path-from-shell-initialize)))
+  ;; stop exec-path from complaining about PATHs being set in ~/.zshrc
+  (setq exec-path-from-shell-check-startup-files nil)
+  ;;(setq exec-path-from-shell-arguments '("-l"))
+  (exec-path-from-shell-copy-env "PYTHONPATH")
+  (exec-path-from-shell-copy-env "GOPATH")
+  (exec-path-from-shell-copy-env "PKG_CONFIG_PATH")
+
+  (exec-path-from-shell-initialize))
 
 (when (system-is-mac)
   (setq ns-function-modifier      'hyper ; set fn key to hyper key  (fn = hyper)

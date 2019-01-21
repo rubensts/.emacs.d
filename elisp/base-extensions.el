@@ -1,8 +1,23 @@
 ;;; -*- lexical-binding: t -*-
 
-;;----------------------------------------------------------------------------
-;; projectile
-;;----------------------------------------------------------------------------
+;;; Outshine
+;; Outshine allows to have headers hidden/collapsed similar to Org Mode
+(use-package dash)
+(use-package dash-functional)
+
+(use-package outshine
+  :straight (:host github :repo "alphapapa/outshine")
+  :hook ((prog-mode          . outshine-mode)
+         (outline-minor-mode . outshine-mode))
+  :config
+  ;;(defvar outline-minor-mode-prefix "\M-#")
+  ;; Narrowing now works within the headline rather than requiring to be on it
+  (advice-add 'outshine-narrow-to-subtree :before
+              (lambda (&rest args) (unless (outline-on-heading-p t)
+				(outline-previous-visible-heading 1)))))
+
+
+;;; Projectile
 (use-package projectile
   :config
   (setq projectile-enable-caching t
@@ -18,6 +33,7 @@
 (use-package which-key
   :init (which-key-mode))
 
+;;; Eyebrowse
 (use-package eyebrowse
   :config
   (setq eyebrowse-wrap-around t
@@ -25,29 +41,8 @@
         eyebrowse-switch-back-and-forth t)
   (eyebrowse-mode t))
 
-;; Version Control
-;; magit
-(use-package magit
-  :hook (after-save . magit-after-save-refresh-status) ; refreshes magit status when file is saved
-  :config
-  (setq magit-completing-read-function 'ivy-completing-read
-        magit-display-buffer-function 'magit-display-buffer-fullframe-status-topleft-v1)
-  ;; automatically refreshes magit status after file is saved
-  ;;(add-hook 'after-save-hook 'magit-after-save-refresh-status)
-  )
-
-;; git-gutter
-(use-package git-gutter
-  :init
-  (global-git-gutter-mode +1))
-
-;; git-timemachine
-(use-package git-timemachine
-  :commands git-timemachine)
-
-
-;; Snippets
-;; yasnippet
+;;; Snippets
+;;;; yasnippet
 (use-package yasnippet
   :config
   (yas-global-mode 1))
@@ -55,12 +50,12 @@
 (use-package yasnippet-snippets
   :after yasnippet)
 
-;; yankpad
+;;;; yankpad
 (use-package yankpad
   :config
   (setq yankpad-file "~/org/yankpad.org"))
 
-;; recentf
+;;; recentf
 (use-package recentf
   :config
   (recentf-mode t)
@@ -73,18 +68,16 @@
                                   "github.*txt$"
                                   ".*png$")))
 
-;; restart-emacs
+;;; restart-emacs
 (use-package restart-emacs
  ;; :general (d/leader-keys "qr" 'restart-emacs)
 )
 
-;; ripgrep
+;;; ripgrep
 (use-package rg)
 
-;;----------------------------------------------------------------------------
+;;; uniquify
 ;; Nicer naming of buffers for files with identical names
-;;----------------------------------------------------------------------------
-;; uniquify
 (use-package uniquify
   :straight nil
   :config
@@ -93,18 +86,18 @@
         uniquify-after-kill-buffer-p t       ; rename after killing uniquified
         uniquify-ignore-buffers-re "^\\*"))  ; don't muck with special buffers
 
-;; undo-tree
+;;; undo-tree
 (use-package undo-tree
   ;;:chords (("uu" . undo-tree-visualize))
   :init
   (global-undo-tree-mode))
 
-;; volatile-highlights
+;;; volatile-highlights
 (use-package volatile-highlights
   :config
   (volatile-highlights-mode t))
 
-;; anzu
+;;; anzu
 (use-package anzu
   :bind (("M-%" . anzu-query-replace)
          ("C-M-%" . anzu-query-replace-regexp))
@@ -113,18 +106,18 @@
                  anzu-replace-to-string-separator "  ")
   (global-anzu-mode +1))
 
-;; bookmarks
+;;; bookmarks
 (use-package bookmark
   :config
   (setq bookmark-completion-ignore-case nil)
   (bookmark-maybe-load-default-file))
 
-;; easy-kill
+;;; easy-kill
 (use-package easy-kill
   :bind (([remap kill-ring-save] . easy-kill)
          ([remap mark-sexp] . easy-mark)))
 
-;; ediff
+;;; ediff
 (use-package ediff
   :hook ((ediff-before-setup . my-store-pre-ediff-winconfig)
          (ediff-quit . my-restore-pre-ediff-winconfig))
@@ -144,9 +137,9 @@
   (defun my-restore-pre-ediff-winconfig ()
     (set-window-configuration my-ediff-last-windows)))
 
-;; fill-column-indicator
+;;; fill-column-indicator
 (use-package fill-column-indicator
-  :disabled t
+  ;;:disabled t
   :config
   (setq fci-rule-width 1
                  fci-rule-color "#5d478b"
